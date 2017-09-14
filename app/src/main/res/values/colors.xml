@@ -6,4 +6,5 @@
     <color name="colorNabBackground">#FAFAFA</color>
     <color name="colorTextDark">#1F1F1F</color>
     <color name="colorTextMedium">#EEEEEE</color>
+    <color name="colorGreyMedium">#CCCCCC</color>
 </resources>

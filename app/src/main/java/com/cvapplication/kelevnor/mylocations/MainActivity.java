@@ -12,6 +12,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -102,7 +103,7 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setItemIconTintList(null);
 
-        String[] values  = new String[]{"Mario", "Luigi"};
+        String[] values  = new String[]{"60 Paulou Mela, GR, 25100", "13 Ergotimou, GR, 27687"};
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, android.R.id.text1, values);
@@ -134,29 +135,34 @@ public class MainActivity extends AppCompatActivity
             SwipeMenuItem openItem = new SwipeMenuItem(
                     getApplicationContext());
             // set item background
-            openItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xC9,
-                    0xCE)));
+//            openItem.setBackground(getResources().getDrawable(R.drawable.remove_icon));//new ColorDrawable(Color.rgb(0xC9, 0xC9,
+//                    0xCE)));
             // set item width
-            openItem.setWidth(90);
+            openItem.setWidth(dp2px(70));
+//            openItem.set
             // set item title
-            openItem.setTitle("Open");
-            // set item title fontsize
-            openItem.setTitleSize(18);
-            // set item title font color
+            openItem.setTitle("Edit");
             openItem.setTitleColor(Color.WHITE);
+            // set item title fontsize
+            openItem.setTitleSize(12);
+            // set item title font color
+            openItem.setBackground(new ColorDrawable(Color.rgb(0xCC, 0xCC, 0xCC)));
             // add to menu
             menu.addMenuItem(openItem);
 
             // create "delete" item
             SwipeMenuItem deleteItem = new SwipeMenuItem(
                     getApplicationContext());
-            // set item background
-            deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
-                    0x3F, 0x25)));
+//            deleteItem.setIcon(getResources().getDrawable(R.drawable.remove_icon));
             // set item width
-            deleteItem.setWidth(90);
+            deleteItem.setWidth(dp2px(70));
+
             // set a icon
-            deleteItem.setIcon(R.drawable.settings);
+            deleteItem.setTitle("Remove");
+            deleteItem.setTitleColor(Color.WHITE);
+            deleteItem.setTitleSize(12);
+            deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9, 0x3F, 0x25)));
+
             // add to menu
             menu.addMenuItem(deleteItem);
         }
@@ -284,5 +290,10 @@ public class MainActivity extends AppCompatActivity
     private void showMissingPermissionError() {
         PermissionUtils.PermissionDeniedDialog
                 .newInstance(true).show(getSupportFragmentManager(), "dialog");
+    }
+
+    private int dp2px(int dp) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
+                getResources().getDisplayMetrics());
     }
 }
