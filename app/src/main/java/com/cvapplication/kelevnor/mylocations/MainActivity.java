@@ -22,6 +22,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -45,6 +47,9 @@ public class MainActivity extends AppCompatActivity
      */
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
+    private boolean inSettings = false;
+    private boolean inList = false;
+    private boolean inMap = true;
     /**
      * Flag indicating whether a requested permission has been denied after returning in
      * {@link #onRequestPermissionsResult(int, String[], int[])}.
@@ -223,18 +228,178 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_map) {
+            inList = false;
+            inSettings = false;
+            inMap = true;
             // Handle the camera action
-            storedListRl.setVisibility(View.GONE);
-            settingsRl.setVisibility(View.GONE);
-            mapRl.setVisibility(View.VISIBLE);
+           Animation animSlide = AnimationUtils.loadAnimation(getApplicationContext(),
+                    R.anim.slide);
+           animSlide.setAnimationListener(new Animation.AnimationListener() {
+               @Override
+               public void onAnimationStart(Animation animation) {
+                   if(inSettings){
+                       mapRl.setVisibility(View.GONE);
+                       storedListRl.setVisibility(View.GONE);
+                       settingsRl.setVisibility(View.VISIBLE);
+                   }
+                   else if(inMap){
+                       settingsRl.setVisibility(View.GONE);
+                       storedListRl.setVisibility(View.GONE);
+                       mapRl.setVisibility(View.VISIBLE);
+                   }
+                   else if(inList){
+                       mapRl.setVisibility(View.GONE);
+                       settingsRl.setVisibility(View.GONE);
+                       storedListRl.setVisibility(View.VISIBLE);
+                   }
+               }
+
+               @Override
+               public void onAnimationEnd(Animation animation) {
+
+                   if(inSettings){
+                       mapRl.setVisibility(View.GONE);
+                       storedListRl.setVisibility(View.GONE);
+                       settingsRl.setVisibility(View.VISIBLE);
+                   }
+                   else if(inMap){
+                       settingsRl.setVisibility(View.GONE);
+                       storedListRl.setVisibility(View.GONE);
+                       mapRl.setVisibility(View.VISIBLE);
+                   }
+                   else if(inList){
+                       mapRl.setVisibility(View.GONE);
+                       settingsRl.setVisibility(View.GONE);
+                       storedListRl.setVisibility(View.VISIBLE);
+                   }
+               }
+
+               @Override
+               public void onAnimationRepeat(Animation animation) {
+
+               }
+           });
+// Start the animation like this
+
+            if(inSettings){
+                settingsRl.startAnimation(animSlide);
+            }
+            else if(inMap){
+                mapRl.startAnimation(animSlide);
+            }
+            else if(inList){
+                storedListRl.startAnimation(animSlide);
+            }
+
         } else if (id == R.id.nav_locationlist) {
-            settingsRl.setVisibility(View.GONE);
-            mapRl.setVisibility(View.GONE);
-            storedListRl.setVisibility(View.VISIBLE);
+
+            inList = true;
+            inSettings = false;
+            inMap = false;
+            Animation animSlide = AnimationUtils.loadAnimation(getApplicationContext(),
+                    R.anim.slide);
+            animSlide.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+                    if(inSettings){
+                        mapRl.setVisibility(View.GONE);
+                        storedListRl.setVisibility(View.GONE);
+                        settingsRl.setVisibility(View.VISIBLE);
+                    }
+                    else if(inMap){
+                        settingsRl.setVisibility(View.GONE);
+                        storedListRl.setVisibility(View.GONE);
+                        mapRl.setVisibility(View.VISIBLE);
+                    }
+                    else if(inList){
+                        mapRl.setVisibility(View.GONE);
+                        settingsRl.setVisibility(View.GONE);
+                        storedListRl.setVisibility(View.VISIBLE);
+                    }
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+
+
+                    if(inSettings){
+                        mapRl.setVisibility(View.GONE);
+                        storedListRl.setVisibility(View.GONE);
+                        settingsRl.setVisibility(View.VISIBLE);
+                    }
+                    else if(inMap){
+                        settingsRl.setVisibility(View.GONE);
+                        storedListRl.setVisibility(View.GONE);
+                        mapRl.setVisibility(View.VISIBLE);
+                    }
+                    else if(inList){
+                        mapRl.setVisibility(View.GONE);
+                        settingsRl.setVisibility(View.GONE);
+                        storedListRl.setVisibility(View.VISIBLE);
+                    }
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+
+            if(inSettings){
+                settingsRl.startAnimation(animSlide);
+            }
+            else if(inMap){
+                mapRl.startAnimation(animSlide);
+            }
+            else if(inList){
+                storedListRl.startAnimation(animSlide);
+            }
+// Start the animation like this
+
         } else if (id == R.id.nav_settings) {
-            settingsRl.setVisibility(View.VISIBLE);
-            mapRl.setVisibility(View.GONE);
-            storedListRl.setVisibility(View.GONE);
+
+            inList = false;
+            inSettings = true;
+            inMap = false;
+
+            Animation animSlide = AnimationUtils.loadAnimation(getApplicationContext(),
+                    R.anim.slide);
+            animSlide.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    settingsRl.setVisibility(View.VISIBLE);
+                    mapRl.setVisibility(View.GONE);
+                    storedListRl.setVisibility(View.GONE);
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+
+            if(inSettings){
+                mapRl.setVisibility(View.GONE);
+                storedListRl.setVisibility(View.GONE);
+                settingsRl.startAnimation(animSlide);
+            }
+            else if(inMap){
+                settingsRl.setVisibility(View.GONE);
+                storedListRl.setVisibility(View.GONE);
+                mapRl.startAnimation(animSlide);
+            }
+            else if(inList){
+                mapRl.setVisibility(View.GONE);
+                settingsRl.setVisibility(View.GONE);
+                storedListRl.startAnimation(animSlide);
+            }
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
