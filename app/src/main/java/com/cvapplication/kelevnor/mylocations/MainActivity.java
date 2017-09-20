@@ -39,7 +39,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,GoogleMap.OnMyLocationButtonClickListener,
         OnMapReadyCallback,
-        ActivityCompat.OnRequestPermissionsResultCallback {
+        ActivityCompat.OnRequestPermissionsResultCallback, Animation.AnimationListener, SwipeMenuListView.OnMenuItemClickListener, View.OnClickListener {
     /**
      * Request code for location permission request.
      *
@@ -59,7 +59,10 @@ public class MainActivity extends AppCompatActivity
     private GoogleMap mMap;
 
     RelativeLayout mapRl, settingsRl, storedListRl;
+    FloatingActionButton fabMain, fabTop, fabBottom;
 
+    private Boolean isFabOpen = false;
+    private Animation fab_open,fab_close,rotate_forward,rotate_backward;
 
     SwipeMenuListView listView;
     @Override
@@ -85,19 +88,20 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                Toast.makeText(MainActivity.this, "CHECK", Toast.LENGTH_SHORT).show();
-                            }
-                        }).show();
-            }
-        });
+        fabMain = (FloatingActionButton) findViewById(R.id.fabmain);
+        fabTop = (FloatingActionButton) findViewById(R.id.fabtop);
+        fabBottom = (FloatingActionButton) findViewById(R.id.fabbottom);
+
+        fab_open = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_open);
+        fab_close = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.fab_close);
+        rotate_forward = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.rotate_forward);
+        rotate_backward = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.rotate_backward);
+
+
+        fabTop.setOnClickListener(this);
+        fabBottom.setOnClickListener(this);
+        fabMain.setOnClickListener(this);
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -114,64 +118,10 @@ public class MainActivity extends AppCompatActivity
                 android.R.layout.simple_list_item_1, android.R.id.text1, values);
 
         listView.setAdapter(adapter);
-
-        listView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
-                switch (index) {
-                    case 0:
-                        // open
-                        break;
-                    case 1:
-                        // delete
-                        break;
-                }
-                // false : close the menu; true : not close the menu
-                return false;
-            }
-        });
+        listView.setOnMenuItemClickListener(this);
     }
 
-    SwipeMenuCreator creator = new SwipeMenuCreator() {
 
-        @Override
-        public void create(SwipeMenu menu) {
-            // create "open" item
-            SwipeMenuItem openItem = new SwipeMenuItem(
-                    getApplicationContext());
-            // set item background
-//            openItem.setBackground(getResources().getDrawable(R.drawable.remove_icon));//new ColorDrawable(Color.rgb(0xC9, 0xC9,
-//                    0xCE)));
-            // set item width
-            openItem.setWidth(dp2px(70));
-//            openItem.set
-            // set item title
-            openItem.setTitle("Edit");
-            openItem.setTitleColor(Color.WHITE);
-            // set item title fontsize
-            openItem.setTitleSize(12);
-            // set item title font color
-            openItem.setBackground(new ColorDrawable(Color.rgb(0xCC, 0xCC, 0xCC)));
-            // add to menu
-            menu.addMenuItem(openItem);
-
-            // create "delete" item
-            SwipeMenuItem deleteItem = new SwipeMenuItem(
-                    getApplicationContext());
-//            deleteItem.setIcon(getResources().getDrawable(R.drawable.remove_icon));
-            // set item width
-            deleteItem.setWidth(dp2px(70));
-
-            // set a icon
-            deleteItem.setTitle("Remove");
-            deleteItem.setTitleColor(Color.WHITE);
-            deleteItem.setTitleSize(12);
-            deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9, 0x3F, 0x25)));
-
-            // add to menu
-            menu.addMenuItem(deleteItem);
-        }
-    };
 
 
     /**
@@ -231,131 +181,36 @@ public class MainActivity extends AppCompatActivity
             inList = false;
             inSettings = false;
             inMap = true;
-            // Handle the camera action
-           Animation animSlide = AnimationUtils.loadAnimation(getApplicationContext(),
-                    R.anim.slide);
-           animSlide.setAnimationListener(new Animation.AnimationListener() {
-               @Override
-               public void onAnimationStart(Animation animation) {
-                   if(inSettings){
-                       mapRl.setVisibility(View.GONE);
-                       storedListRl.setVisibility(View.GONE);
-                       settingsRl.setVisibility(View.VISIBLE);
-                   }
-                   else if(inMap){
-                       settingsRl.setVisibility(View.GONE);
-                       storedListRl.setVisibility(View.GONE);
-                       mapRl.setVisibility(View.VISIBLE);
-                   }
-                   else if(inList){
-                       mapRl.setVisibility(View.GONE);
-                       settingsRl.setVisibility(View.GONE);
-                       storedListRl.setVisibility(View.VISIBLE);
-                   }
-               }
 
-               @Override
-               public void onAnimationEnd(Animation animation) {
+            mapRl.setVisibility(View.VISIBLE);
+            settingsRl.setVisibility(View.GONE);
+            storedListRl.setVisibility(View.GONE);
 
-                   if(inSettings){
-                       mapRl.setVisibility(View.GONE);
-                       storedListRl.setVisibility(View.GONE);
-                       settingsRl.setVisibility(View.VISIBLE);
-                   }
-                   else if(inMap){
-                       settingsRl.setVisibility(View.GONE);
-                       storedListRl.setVisibility(View.GONE);
-                       mapRl.setVisibility(View.VISIBLE);
-                   }
-                   else if(inList){
-                       mapRl.setVisibility(View.GONE);
-                       settingsRl.setVisibility(View.GONE);
-                       storedListRl.setVisibility(View.VISIBLE);
-                   }
-               }
-
-               @Override
-               public void onAnimationRepeat(Animation animation) {
-
-               }
-           });
-// Start the animation like this
-
-            if(inSettings){
-                settingsRl.startAnimation(animSlide);
+            if(isFabOpen){
+                animateFAB();
             }
-            else if(inMap){
-                mapRl.startAnimation(animSlide);
-            }
-            else if(inList){
-                storedListRl.startAnimation(animSlide);
-            }
+
+            fabMain.setVisibility(View.VISIBLE);
+            fabTop.setVisibility(View.VISIBLE);
+            fabBottom.setVisibility(View.VISIBLE);
 
         } else if (id == R.id.nav_locationlist) {
 
             inList = true;
             inSettings = false;
             inMap = false;
-            Animation animSlide = AnimationUtils.loadAnimation(getApplicationContext(),
-                    R.anim.slide);
-            animSlide.setAnimationListener(new Animation.AnimationListener() {
-                @Override
-                public void onAnimationStart(Animation animation) {
-                    if(inSettings){
-                        mapRl.setVisibility(View.GONE);
-                        storedListRl.setVisibility(View.GONE);
-                        settingsRl.setVisibility(View.VISIBLE);
-                    }
-                    else if(inMap){
-                        settingsRl.setVisibility(View.GONE);
-                        storedListRl.setVisibility(View.GONE);
-                        mapRl.setVisibility(View.VISIBLE);
-                    }
-                    else if(inList){
-                        mapRl.setVisibility(View.GONE);
-                        settingsRl.setVisibility(View.GONE);
-                        storedListRl.setVisibility(View.VISIBLE);
-                    }
-                }
 
-                @Override
-                public void onAnimationEnd(Animation animation) {
+            mapRl.setVisibility(View.GONE);
+            settingsRl.setVisibility(View.GONE);
+            storedListRl.setVisibility(View.VISIBLE);
 
-
-                    if(inSettings){
-                        mapRl.setVisibility(View.GONE);
-                        storedListRl.setVisibility(View.GONE);
-                        settingsRl.setVisibility(View.VISIBLE);
-                    }
-                    else if(inMap){
-                        settingsRl.setVisibility(View.GONE);
-                        storedListRl.setVisibility(View.GONE);
-                        mapRl.setVisibility(View.VISIBLE);
-                    }
-                    else if(inList){
-                        mapRl.setVisibility(View.GONE);
-                        settingsRl.setVisibility(View.GONE);
-                        storedListRl.setVisibility(View.VISIBLE);
-                    }
-
-                }
-
-                @Override
-                public void onAnimationRepeat(Animation animation) {
-
-                }
-            });
-
-            if(inSettings){
-                settingsRl.startAnimation(animSlide);
+            if(isFabOpen){
+                animateFAB();
             }
-            else if(inMap){
-                mapRl.startAnimation(animSlide);
-            }
-            else if(inList){
-                storedListRl.startAnimation(animSlide);
-            }
-// Start the animation like this
+
+            fabMain.setVisibility(View.VISIBLE);
+            fabTop.setVisibility(View.VISIBLE);
+            fabBottom.setVisibility(View.VISIBLE);
 
         } else if (id == R.id.nav_settings) {
 
@@ -363,43 +218,17 @@ public class MainActivity extends AppCompatActivity
             inSettings = true;
             inMap = false;
 
-            Animation animSlide = AnimationUtils.loadAnimation(getApplicationContext(),
-                    R.anim.slide);
-            animSlide.setAnimationListener(new Animation.AnimationListener() {
-                @Override
-                public void onAnimationStart(Animation animation) {
+            mapRl.setVisibility(View.GONE);
+            settingsRl.setVisibility(View.VISIBLE);
+            storedListRl.setVisibility(View.GONE);
 
-                }
-
-                @Override
-                public void onAnimationEnd(Animation animation) {
-                    settingsRl.setVisibility(View.VISIBLE);
-                    mapRl.setVisibility(View.GONE);
-                    storedListRl.setVisibility(View.GONE);
-
-                }
-
-                @Override
-                public void onAnimationRepeat(Animation animation) {
-
-                }
-            });
-
-            if(inSettings){
-                mapRl.setVisibility(View.GONE);
-                storedListRl.setVisibility(View.GONE);
-                settingsRl.startAnimation(animSlide);
+            if(isFabOpen){
+                animateFAB();
             }
-            else if(inMap){
-                settingsRl.setVisibility(View.GONE);
-                storedListRl.setVisibility(View.GONE);
-                mapRl.startAnimation(animSlide);
-            }
-            else if(inList){
-                mapRl.setVisibility(View.GONE);
-                settingsRl.setVisibility(View.GONE);
-                storedListRl.startAnimation(animSlide);
-            }
+
+            fabMain.setVisibility(View.GONE);
+            fabTop.setVisibility(View.GONE);
+            fabBottom.setVisibility(View.GONE);
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -460,5 +289,109 @@ public class MainActivity extends AppCompatActivity
     private int dp2px(int dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
                 getResources().getDisplayMetrics());
+    }
+
+    @Override
+    public void onAnimationStart(Animation animation) {
+
+    }
+
+    @Override
+    public void onAnimationEnd(Animation animation) {
+
+    }
+
+    @Override
+    public void onAnimationRepeat(Animation animation) {
+
+    }
+
+
+    SwipeMenuCreator creator = new SwipeMenuCreator() {
+
+        @Override
+        public void create(SwipeMenu menu) {
+            // create "open" item
+            SwipeMenuItem openItem = new SwipeMenuItem(
+                    getApplicationContext());
+            openItem.setWidth(dp2px(70));
+            openItem.setTitle("Edit");
+            openItem.setTitleColor(Color.WHITE);
+            openItem.setTitleSize(12);
+            openItem.setBackground(new ColorDrawable(Color.rgb(0xCC, 0xCC, 0xCC)));
+            // add to menu
+            menu.addMenuItem(openItem);
+
+            // create "delete" item
+            SwipeMenuItem deleteItem = new SwipeMenuItem(
+                    getApplicationContext());
+            deleteItem.setWidth(dp2px(70));
+            deleteItem.setTitle("Remove");
+            deleteItem.setTitleColor(Color.WHITE);
+            deleteItem.setTitleSize(12);
+            deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9, 0x3F, 0x25)));
+
+            menu.addMenuItem(deleteItem);
+        }
+    };
+
+    @Override
+    public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+        switch (index) {
+            case 0:
+                // open
+                break;
+            case 1:
+                // delete
+                break;
+        }
+        // false : close the menu; true : not close the menu
+        return false;
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.fabmain:
+
+                animateFAB();
+                break;
+            case R.id.fabtop:
+                Log.d("Marios", "Fab 1");
+                break;
+            case R.id.fabbottom:
+                Log.d("Marios", "Fab 2");
+                break;
+        }
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+
+    }
+
+    public void animateFAB(){
+
+        if(isFabOpen){
+
+            fabMain.startAnimation(rotate_backward);
+            fabTop.startAnimation(fab_close);
+            fabBottom.startAnimation(fab_close);
+            fabTop.setClickable(false);
+            fabBottom.setClickable(false);
+            isFabOpen = false;
+            Log.d("Raj", "close");
+
+        } else {
+
+            fabMain.startAnimation(rotate_forward);
+            fabTop.startAnimation(fab_open);
+            fabBottom.startAnimation(fab_open);
+            fabTop.setClickable(true);
+            fabBottom.setClickable(true);
+            isFabOpen = true;
+            Log.d("Raj","open");
+
+        }
     }
 }
