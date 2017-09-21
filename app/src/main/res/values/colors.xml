@@ -7,4 +7,13 @@
     <color name="colorTextDark">#1F1F1F</color>
     <color name="colorTextMedium">#EEEEEE</color>
     <color name="colorGreyMedium">#CCCCCC</color>
+    <color name="colorGreyMediumDarker">#999999</color>
+    <color name="colorBlue">#00397F</color>
+    <color name="colorGreen">#2CAB13</color>
+    <color name="colorWhite">#FFFFFF</color>
+    <color name="colorText555">#555555</color>
+
+    <color name="markerBlue">#1800ff</color>
+    <color name="markerGreen">#2cab13</color>
+
 </resources>

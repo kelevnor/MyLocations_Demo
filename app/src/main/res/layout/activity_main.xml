@@ -26,11 +26,31 @@
             android:layout_height="match_parent"
             android:layout_gravity="start"
             android:fitsSystemWindows="true"
-            android:background="@color/colorTextMedium"
+            android:background="@color/colorGreyMedium"
             app:headerLayout="@layout/nav_header_main"
             app:menu="@menu/activity_main_drawer"
-            app:itemTextColor="@color/colorTextDark"
-            app:itemIconTint="@color/colorTextDark"/>
+            app:itemTextColor="@color/colorText555"
+            app:itemIconTint="@color/colorTextDark"
+            >
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:clickable="true"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/footer_item_2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:textSize="@dimen/text_versioncode"
+                    android:textColor="@color/colorGreyMediumDarker"
+                    android:text="Version 0.1.0"
+                    android:paddingBottom="5dp"
+                    android:paddingRight="10dp"/>
+
+            </LinearLayout>
+        </android.support.design.widget.NavigationView>
 
 
 

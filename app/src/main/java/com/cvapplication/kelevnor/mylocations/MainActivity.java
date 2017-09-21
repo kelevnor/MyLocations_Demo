@@ -2,15 +2,17 @@ package com.cvapplication.kelevnor.mylocations;
 
 import android.Manifest;
 
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatDialog;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -22,30 +24,44 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
-
 import com.baoyz.swipemenulistview.SwipeMenu;
 import com.baoyz.swipemenulistview.SwipeMenuCreator;
 import com.baoyz.swipemenulistview.SwipeMenuItem;
 import com.baoyz.swipemenulistview.SwipeMenuListView;
+import com.cvapplication.kelevnor.mylocations.Utils.UtilityHelperClass;
+import com.cvapplication.kelevnor.mylocations.models.objects.Location;
+import com.cvapplication.kelevnor.mylocations.models.objects.LocationList;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,GoogleMap.OnMyLocationButtonClickListener,
         OnMapReadyCallback,
-        ActivityCompat.OnRequestPermissionsResultCallback, Animation.AnimationListener, SwipeMenuListView.OnMenuItemClickListener, View.OnClickListener {
+        ActivityCompat.OnRequestPermissionsResultCallback, Animation.AnimationListener, SwipeMenuListView.OnMenuItemClickListener, View.OnClickListener, GoogleMap.OnMapLongClickListener {
     /**
      * Request code for location permission request.
      *
      * @see #onRequestPermissionsResult(int, String[], int[])
      */
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+
+    private boolean hasPickedMarker = false;
+    private boolean pickedMarkerBlue = false;
+    private boolean pickedMarkerGreen = false;
 
     private boolean inSettings = false;
     private boolean inList = false;
@@ -65,16 +81,28 @@ public class MainActivity extends AppCompatActivity
     private Animation fab_open,fab_close,rotate_forward,rotate_backward;
 
     SwipeMenuListView listView;
+
+    ImageView blueSelect, greenSelect, blueSelectHeight, greenSelectHeight;
+    LocationList myLocationsList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.activity_main);
 
         mapRl = (RelativeLayout) findViewById(R.id.rl_map);
         settingsRl = (RelativeLayout) findViewById(R.id.rl_settings);
         storedListRl = (RelativeLayout) findViewById(R.id.rl_storedlocations);
 
+        blueSelect = (ImageView) findViewById(R.id.iv_blue_selected);
+        greenSelect = (ImageView) findViewById(R.id.iv_green_selected);
 
+        blueSelectHeight = (ImageView) findViewById(R.id.iv_blue_selected_height);
+        greenSelectHeight = (ImageView) findViewById(R.id.iv_green_selected_height);
         listView = (SwipeMenuListView) findViewById(R.id.listView);
 
         Log.e("TEST_GIT","TEST_GIT");
@@ -97,7 +125,6 @@ public class MainActivity extends AppCompatActivity
         rotate_forward = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.rotate_forward);
         rotate_backward = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.rotate_backward);
 
-
         fabTop.setOnClickListener(this);
         fabBottom.setOnClickListener(this);
         fabMain.setOnClickListener(this);
@@ -119,10 +146,21 @@ public class MainActivity extends AppCompatActivity
 
         listView.setAdapter(adapter);
         listView.setOnMenuItemClickListener(this);
+
+        if(UtilityHelperClass.getIntegerFromPreference(getResources().getString(R.string.list_init), getApplicationContext())==0){
+            myLocationsList = new LocationList();
+            displayDialogOneButton("WELCOME","Apply long clicks on the map to add\nmarkers and manage them in a list!\nWhile on map view, click + button\nto pick a marker","DISMISS");
+        }
+        else{
+            myLocationsList = UtilityHelperClass.getLocationListFromSharedPreferences(getApplicationContext());
+            if(myLocationsList.getLocations().size()==0){
+                displayDialogOneButton("EMPTY","Start Long Clicking to add locations to your list!","DISMISS");
+            }
+            else{
+
+            }
+        }
     }
-
-
-
 
     /**
      * Enables the My Location layer if the fine location permission has been granted.
@@ -145,7 +183,8 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+
+            displayDialogTwoButtons("EXIT", "Are you sure you want to exit?", "NO", "YES");
         }
     }
 
@@ -164,7 +203,7 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_markers) {
             return true;
         }
 
@@ -178,57 +217,58 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_map) {
-            inList = false;
-            inSettings = false;
-            inMap = true;
-
-            mapRl.setVisibility(View.VISIBLE);
-            settingsRl.setVisibility(View.GONE);
-            storedListRl.setVisibility(View.GONE);
-
+            navigationSetViewsStoreBoolean(item);
             if(isFabOpen){
                 animateFAB();
             }
-
-            fabMain.setVisibility(View.VISIBLE);
-            fabTop.setVisibility(View.VISIBLE);
-            fabBottom.setVisibility(View.VISIBLE);
-
+            fabMain.show();
+            fabTop.hide();
+            fabBottom.hide();
+            if(hasPickedMarker){
+                if(pickedMarkerBlue){
+                    greenSelect.setVisibility(View.GONE);
+                    blueSelect.setVisibility(View.VISIBLE);
+                    greenSelectHeight.setVisibility(View.GONE);
+                    blueSelectHeight.setVisibility(View.VISIBLE);
+                }
+                else if(pickedMarkerGreen){
+                    greenSelect.setVisibility(View.VISIBLE);
+                    blueSelect.setVisibility(View.GONE);
+                    greenSelectHeight.setVisibility(View.VISIBLE);
+                    blueSelectHeight.setVisibility(View.GONE);
+                }
+                else{
+                    greenSelect.setVisibility(View.GONE);
+                    blueSelect.setVisibility(View.GONE);
+                    greenSelectHeight.setVisibility(View.GONE);
+                    blueSelectHeight.setVisibility(View.GONE);
+                }
+            }
         } else if (id == R.id.nav_locationlist) {
-
-            inList = true;
-            inSettings = false;
-            inMap = false;
-
-            mapRl.setVisibility(View.GONE);
-            settingsRl.setVisibility(View.GONE);
-            storedListRl.setVisibility(View.VISIBLE);
-
+            navigationSetViewsStoreBoolean(item);
             if(isFabOpen){
                 animateFAB();
             }
-
-            fabMain.setVisibility(View.VISIBLE);
-            fabTop.setVisibility(View.VISIBLE);
-            fabBottom.setVisibility(View.VISIBLE);
+            fabMain.hide();
+            fabTop.hide();
+            fabBottom.hide();
+            greenSelect.setVisibility(View.GONE);
+            blueSelect.setVisibility(View.GONE);
+            greenSelectHeight.setVisibility(View.GONE);
+            blueSelectHeight.setVisibility(View.GONE);
 
         } else if (id == R.id.nav_settings) {
-
-            inList = false;
-            inSettings = true;
-            inMap = false;
-
-            mapRl.setVisibility(View.GONE);
-            settingsRl.setVisibility(View.VISIBLE);
-            storedListRl.setVisibility(View.GONE);
-
+            navigationSetViewsStoreBoolean(item);
             if(isFabOpen){
                 animateFAB();
             }
-
-            fabMain.setVisibility(View.GONE);
-            fabTop.setVisibility(View.GONE);
-            fabBottom.setVisibility(View.GONE);
+            fabMain.hide();
+            fabTop.hide();
+            fabBottom.hide();
+            greenSelect.setVisibility(View.GONE);
+            blueSelect.setVisibility(View.GONE);
+            greenSelectHeight.setVisibility(View.GONE);
+            blueSelectHeight.setVisibility(View.GONE);
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -246,6 +286,7 @@ public class MainActivity extends AppCompatActivity
 
         mMap.setOnMyLocationButtonClickListener(this);
         enableMyLocation();
+        mMap.setOnMapLongClickListener(this);
     }
 
 
@@ -353,14 +394,29 @@ public class MainActivity extends AppCompatActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.fabmain:
-
                 animateFAB();
                 break;
             case R.id.fabtop:
                 Log.d("Marios", "Fab 1");
+                greenSelect.setVisibility(View.GONE);
+                blueSelect.setVisibility(View.VISIBLE);
+                greenSelectHeight.setVisibility(View.GONE);
+                blueSelectHeight.setVisibility(View.VISIBLE);
+                hasPickedMarker = true;
+                pickedMarkerBlue = true;
+                pickedMarkerGreen = false;
+                animateFAB();
                 break;
             case R.id.fabbottom:
                 Log.d("Marios", "Fab 2");
+                greenSelect.setVisibility(View.VISIBLE);
+                blueSelect.setVisibility(View.GONE);
+                greenSelectHeight.setVisibility(View.VISIBLE);
+                blueSelectHeight.setVisibility(View.GONE);
+                hasPickedMarker = true;
+                pickedMarkerGreen = true;
+                pickedMarkerBlue = false;
+                animateFAB();
                 break;
         }
     }
@@ -373,25 +429,178 @@ public class MainActivity extends AppCompatActivity
     public void animateFAB(){
 
         if(isFabOpen){
-
             fabMain.startAnimation(rotate_backward);
             fabTop.startAnimation(fab_close);
             fabBottom.startAnimation(fab_close);
             fabTop.setClickable(false);
             fabBottom.setClickable(false);
             isFabOpen = false;
-            Log.d("Raj", "close");
+            Log.d("Marios", "close");
 
         } else {
-
             fabMain.startAnimation(rotate_forward);
             fabTop.startAnimation(fab_open);
             fabBottom.startAnimation(fab_open);
             fabTop.setClickable(true);
             fabBottom.setClickable(true);
             isFabOpen = true;
-            Log.d("Raj","open");
+            Log.d("Marios","open");
 
         }
     }
+
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+
+        if(hasPickedMarker){
+            displayDialogAddMarkerName("ENTER NAME:", "CANCEL", "ADD", latLng);
+        }
+        else{
+            displayDialogOneButton("OOPS!!!","You need to pick a marker icon.\nClick + button to pick a marker.", "DISMISS");
+        }
+
+
+    }
+
+    private void displayDialogTwoButtons (String title, String message, String leftBtn, String rightBtn){
+        final AlertDialog.Builder builder =
+                new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setMessage(message);
+        builder.setPositiveButton(rightBtn, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+                finish();
+            }
+        });
+        builder.setNegativeButton(leftBtn, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+
+            }
+        });
+
+        builder.show();
+    }
+
+    private void displayDialogOneButton (String title, String message, String centerBtn){
+        final AlertDialog.Builder builder =
+                new AlertDialog.Builder(this);
+        final AppCompatDialog alert = builder.create();
+        builder.setTitle(title);
+        builder.setMessage(message);
+        builder.setPositiveButton(centerBtn, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+
+
+        builder.show();
+    }
+    private void displayDialogAddMarkerName(String title, String leftBtn, String rightBtn, final LatLng latLng){
+        final AlertDialog.Builder builder =
+                new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        final EditText input = new EditText(MainActivity.this);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT);
+        input.setLayoutParams(lp);
+        builder.setView(input);
+        builder.setPositiveButton(rightBtn, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+
+                if(input.getText().length()!=0){
+
+                    Location tempLocation = new Location();
+
+                    tempLocation.setName(input.getText().toString());
+                    tempLocation.setLocationLatitude(latLng.latitude);
+                    tempLocation.setLocationLongitude(latLng.longitude);
+
+                    if(pickedMarkerBlue){
+                        tempLocation.setMarkerColor("BLUE");
+//                        myLocationsList.getLocations().add(tempLocation);
+                        displayDialogOneButton("SAVED", "Your location with name:\n"+input.getText().toString()+"\nis saved!", "DISMISS");
+
+                        addMarkerOnMap(latLng, input.getText().toString(), "BLUE");
+
+                    }
+                    else if(pickedMarkerGreen){
+                        tempLocation.setMarkerColor("GREEN");
+//                        myLocationsList.getLocations().add(tempLocation);
+                        displayDialogOneButton("SAVED", "Your location with name:\n"+input.getText().toString()+"\nis saved!", "DISMISS");
+
+                        addMarkerOnMap(latLng, input.getText().toString(), "GREEN");
+                    }
+                    else{
+                        displayDialogOneButton("OOPS!!!", "It looks like your marker selection is not set.\nClick + button to pick a marker.", "DISMISS");
+                    }
+                }
+                else{
+                    displayDialogOneButton("ERROR", "Name is Empty!!!", "DISMISS");
+                }
+
+            }
+        });
+        builder.setNegativeButton(leftBtn, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+
+            }
+        });
+
+        builder.show();
+    }
+
+    private void addMarkerOnMap(LatLng latlng, String name, String color){
+
+        if(color.equals("BLUE")){
+            mMap.addMarker(new MarkerOptions().position(latlng)
+                    .title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_location_on_blue_24dp)));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
+        }
+        else{
+            mMap.addMarker(new MarkerOptions().position(latlng)
+                    .title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_location_on_green_24dp)));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
+        }
+
+
+    }
+
+
+    private void navigationSetViewsStoreBoolean(MenuItem item){
+        int id = item.getItemId();
+        if (id == R.id.nav_map) {
+            inList = false;
+            inSettings = false;
+            inMap = true;
+            mapRl.setVisibility(View.VISIBLE);
+            settingsRl.setVisibility(View.GONE);
+            storedListRl.setVisibility(View.GONE);
+        } else if (id == R.id.nav_locationlist) {
+            inList = true;
+            inSettings = false;
+            inMap = false;
+            mapRl.setVisibility(View.GONE);
+            settingsRl.setVisibility(View.GONE);
+            storedListRl.setVisibility(View.VISIBLE);
+        } else if (id == R.id.nav_settings) {
+            inList = false;
+            inSettings = true;
+            inMap = false;
+            mapRl.setVisibility(View.GONE);
+            settingsRl.setVisibility(View.VISIBLE);
+            storedListRl.setVisibility(View.GONE);
+        }
+    }
+
 }

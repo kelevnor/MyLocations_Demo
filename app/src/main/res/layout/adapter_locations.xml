@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rl_outer"
+    android:layout_width="match_parent"
+    android:layout_height="90dp">
+
+    <ImageView
+        android:id="@+id/iv_pin"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:src="@drawable/ic_location_on_black_48dp"
+        android:layout_margin="10dp"/>
+
+    <View
+        android:layout_width="0.5dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="90dp"
+        android:background="@color/colorGreyMediumDarker"/>
+
+    <TextView
+        android:id="@+id/tv_name"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:layout_marginLeft="100dp"
+        android:text="Location Name"
+        android:textColor="@color/colorText555"
+        android:gravity="bottom"/>
+
+    <TextView
+        android:id="@+id/tv_subname"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:layout_marginLeft="100dp"
+        android:layout_marginTop="45dp"
+        android:textColor="@color/colorGreyMedium"
+        android:text="Additional Info"
+        />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_marginTop="89dp"
+        android:background="@color/colorGreyMediumDarker"/>
+
+</RelativeLayout>
+
+

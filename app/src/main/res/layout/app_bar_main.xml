@@ -17,9 +17,10 @@
             android:layout_width="match_parent"
             app:theme="@style/ToolbarColoredBackArrow"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/colorTextMedium"
-            app:titleTextColor="@color/colorTextDark"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
+            android:background="@color/colorGreyMedium"
+            app:titleTextColor="@color/colorText555"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
+            app:titleTextAppearance="@style/Toolbar.TitleText"/>
 
     </android.support.design.widget.AppBarLayout>
 
@@ -55,11 +56,41 @@
         <!--app:srcCompat="@drawable/bluelocation"-->
         <!--app:backgroundTint="@color/colorNabBackground"/>-->
 
+
+    <ImageView
+        android:id="@+id/iv_green_selected"
+        android:layout_width="match_parent"
+        android:layout_height="5dp"
+        android:visibility="gone"
+        android:layout_gravity="bottom|end"
+        android:background="@color/markerGreen"/>
+    <ImageView
+        android:id="@+id/iv_green_selected_height"
+        android:layout_width="5dp"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:layout_gravity="end"
+        android:background="@color/markerGreen"/>
+    <ImageView
+        android:id="@+id/iv_blue_selected_height"
+        android:layout_width="5dp"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:layout_gravity="end"
+        android:background="@color/markerBlue"/>
+
+    <ImageView
+        android:id="@+id/iv_blue_selected"
+        android:layout_width="match_parent"
+        android:layout_height="5dp"
+        android:visibility="gone"
+        android:layout_gravity="bottom|end"
+        android:background="@color/markerBlue"/>
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabtop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="160dp"
+        android:layout_marginBottom="220dp"
         android:layout_gravity="bottom|end"
         android:layout_marginRight="@dimen/fab_margin"
         android:visibility="invisible"
@@ -71,7 +102,7 @@
         android:id="@+id/fabbottom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="90dp"
+        android:layout_marginBottom="150dp"
         android:layout_gravity="bottom|end"
         android:layout_marginRight="@dimen/fab_margin"
         android:visibility="invisible"
@@ -87,7 +118,8 @@
         app:elevation="6dp"
         app:backgroundTint="@color/colorNabBackground"
         app:pressedTranslationZ="12dp"
-        android:layout_margin="@dimen/fab_margin"
+        android:layout_marginRight="@dimen/fab_margin"
+        android:layout_marginBottom="70dp"
         android:src="@drawable/ic_add_black_24dp" />
 
 </android.support.design.widget.CoordinatorLayout>
