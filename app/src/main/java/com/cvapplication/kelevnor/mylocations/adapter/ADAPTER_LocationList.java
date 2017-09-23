@@ -2,6 +2,7 @@ package com.cvapplication.kelevnor.mylocations.adapter;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 
 import com.cvapplication.kelevnor.mylocations.R;
 import com.cvapplication.kelevnor.mylocations.Utils.ImageLoader;
+import com.cvapplication.kelevnor.mylocations.models.MarkersClass;
 import com.cvapplication.kelevnor.mylocations.models.objects.Location;
 import java.util.ArrayList;
 /**
@@ -58,6 +60,17 @@ public class ADAPTER_LocationList extends BaseAdapter {
         holder.name = (TextView) convertView.findViewById(R.id.tv_name);
         holder.subname = (TextView) convertView.findViewById(R.id.tv_subname);
         holder.imageMarker = (ImageView) convertView.findViewById(R.id.iv_pin);
+
+        holder.name.setText(searchArrayList.get(position).getName());
+        holder.subname.setText("Latitude: "+searchArrayList.get(position).getLocationLatitude()+"\n"+"Longitude: "+searchArrayList.get(position).getLocationLongitude());
+
+        if(searchArrayList.get(position).getMarkerColor()== MarkersClass.BLUE_MARKER_INT){
+            holder.imageMarker.setImageDrawable(ContextCompat.getDrawable(act, R.drawable.ic_location_on_blue_36dp));
+        }
+        else if(searchArrayList.get(position).getMarkerColor()== MarkersClass.GREEN_MARKER_INT){
+            holder.imageMarker.setImageDrawable(ContextCompat.getDrawable(act, R.drawable.ic_location_on_green_36dp));
+        }
+
 
         return convertView;
     }

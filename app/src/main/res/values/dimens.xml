@@ -6,6 +6,7 @@
     <dimen name="nav_header_height">140dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="text_label">16dp</dimen>
+    <dimen name="text_m_label">15dp</dimen>
     <dimen name="text_sub_label">14dp</dimen>
     <dimen name="text_profile_label">18dp</dimen>
     <dimen name="text_p">13dp</dimen>

@@ -8,12 +8,13 @@
     <color name="colorTextMedium">#EEEEEE</color>
     <color name="colorGreyMedium">#CCCCCC</color>
     <color name="colorGreyMediumDarker">#999999</color>
-    <color name="colorBlue">#00397F</color>
+    <color name="colorBlue">#5381e3</color>
     <color name="colorGreen">#2CAB13</color>
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorText555">#555555</color>
 
-    <color name="markerBlue">#1800ff</color>
+    <color name="markerBlue">#5381e3</color>
     <color name="markerGreen">#2cab13</color>
+    <color name="palepurple">#787faa</color>
 
 </resources>

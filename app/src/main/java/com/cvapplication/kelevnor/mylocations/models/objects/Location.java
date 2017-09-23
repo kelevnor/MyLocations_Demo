@@ -11,7 +11,7 @@ public class Location {
     private String name;
     @SerializedName("marker_color")
     @Expose
-    private String markerColor;
+    private Integer markerColor;
     @SerializedName("location_latitude")
     @Expose
     private Double locationLatitude;
@@ -42,10 +42,10 @@ public class Location {
     public void setLocationLongitude(Double locationLongitude) {
         this.locationLongitude = locationLongitude;
     }
-    public String getMarkerColor() {
+    public Integer getMarkerColor() {
         return markerColor;
     }
-    public void setMarkerColor(String markerColor) {
+    public void setMarkerColor(Integer markerColor) {
         this.markerColor = markerColor;
     }
 }

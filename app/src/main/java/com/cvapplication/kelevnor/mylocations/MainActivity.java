@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatDialog;
 import android.util.Log;
@@ -26,6 +27,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
@@ -33,20 +35,31 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
+
 import com.baoyz.swipemenulistview.SwipeMenu;
 import com.baoyz.swipemenulistview.SwipeMenuCreator;
 import com.baoyz.swipemenulistview.SwipeMenuItem;
 import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.cvapplication.kelevnor.mylocations.Utils.UtilityHelperClass;
+import com.cvapplication.kelevnor.mylocations.adapter.ADAPTER_LocationList;
+import com.cvapplication.kelevnor.mylocations.models.MarkersClass;
 import com.cvapplication.kelevnor.mylocations.models.objects.Location;
 import com.cvapplication.kelevnor.mylocations.models.objects.LocationList;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import org.w3c.dom.Text;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,GoogleMap.OnMyLocationButtonClickListener,
@@ -77,11 +90,14 @@ public class MainActivity extends AppCompatActivity
     RelativeLayout mapRl, settingsRl, storedListRl;
     FloatingActionButton fabMain, fabTop, fabBottom;
 
+    TextView menuCounter;
+
     private Boolean isFabOpen = false;
     private Animation fab_open,fab_close,rotate_forward,rotate_backward;
 
     SwipeMenuListView listView;
 
+    TextView markerIndicator, emptyList;
     ImageView blueSelect, greenSelect, blueSelectHeight, greenSelectHeight;
     LocationList myLocationsList;
 
@@ -97,6 +113,9 @@ public class MainActivity extends AppCompatActivity
         mapRl = (RelativeLayout) findViewById(R.id.rl_map);
         settingsRl = (RelativeLayout) findViewById(R.id.rl_settings);
         storedListRl = (RelativeLayout) findViewById(R.id.rl_storedlocations);
+
+        markerIndicator = (TextView) findViewById(R.id.tv_marker_pick_indicator);
+        emptyList = (TextView) findViewById(R.id.tv_empty_list);
 
         blueSelect = (ImageView) findViewById(R.id.iv_blue_selected);
         greenSelect = (ImageView) findViewById(R.id.iv_green_selected);
@@ -115,6 +134,8 @@ public class MainActivity extends AppCompatActivity
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+
 
         fabMain = (FloatingActionButton) findViewById(R.id.fabmain);
         fabTop = (FloatingActionButton) findViewById(R.id.fabtop);
@@ -139,6 +160,9 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setItemIconTintList(null);
 
+        menuCounter =(TextView) MenuItemCompat.getActionView(navigationView.getMenu().
+                findItem(R.id.nav_locationlist));
+
         String[] values  = new String[]{"60 Paulou Mela, GR, 25100", "13 Ergotimou, GR, 27687"};
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -150,14 +174,17 @@ public class MainActivity extends AppCompatActivity
         if(UtilityHelperClass.getIntegerFromPreference(getResources().getString(R.string.list_init), getApplicationContext())==0){
             myLocationsList = new LocationList();
             displayDialogOneButton("WELCOME","Apply long clicks on the map to add\nmarkers and manage them in a list!\nWhile on map view, click + button\nto pick a marker","DISMISS");
+            menuCounter.setText("0");
         }
         else{
             myLocationsList = UtilityHelperClass.getLocationListFromSharedPreferences(getApplicationContext());
             if(myLocationsList.getLocations().size()==0){
                 displayDialogOneButton("EMPTY","Start Long Clicking to add locations to your list!","DISMISS");
+                menuCounter.setText("0");
             }
             else{
-
+                //show markers
+                menuCounter.setText(String.valueOf(myLocationsList.getLocations().size()));
             }
         }
     }
@@ -203,7 +230,13 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_markers) {
+        if (id == R.id.action_reset_marker_on_map) {
+            clearMarkersFromMap();
+            setResetMarkersOnMap();
+            return true;
+        }
+        else if (id == R.id.action_clear_markers) {
+            clearMarkersFromMap();
             return true;
         }
 
@@ -256,6 +289,8 @@ public class MainActivity extends AppCompatActivity
             blueSelect.setVisibility(View.GONE);
             greenSelectHeight.setVisibility(View.GONE);
             blueSelectHeight.setVisibility(View.GONE);
+
+            adapterAction();
 
         } else if (id == R.id.nav_settings) {
             navigationSetViewsStoreBoolean(item);
@@ -380,10 +415,12 @@ public class MainActivity extends AppCompatActivity
     public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
         switch (index) {
             case 0:
-                // open
+                // edit
+                displayDialogEditLocation("Change the name of Location, \""+myLocationsList.getLocations().get(position).getName()+"\" to ", "CANCEL", "CHANGE", position);
                 break;
             case 1:
                 // delete
+                displayRemoveEntry("REMOVE ENTRY","Would you like to remove \"" + myLocationsList.getLocations().get(position).getName() + "\" ?","CANCEL","REMOVE",position);
                 break;
         }
         // false : close the menu; true : not close the menu
@@ -406,6 +443,7 @@ public class MainActivity extends AppCompatActivity
                 pickedMarkerBlue = true;
                 pickedMarkerGreen = false;
                 animateFAB();
+                textViewBlink(false);
                 break;
             case R.id.fabbottom:
                 Log.d("Marios", "Fab 2");
@@ -417,6 +455,7 @@ public class MainActivity extends AppCompatActivity
                 pickedMarkerGreen = true;
                 pickedMarkerBlue = false;
                 animateFAB();
+                textViewBlink(true);
                 break;
         }
     }
@@ -520,24 +559,52 @@ public class MainActivity extends AppCompatActivity
 
                     Location tempLocation = new Location();
 
+                    ArrayList<Location> tempLoc = new ArrayList<>();
+
+                    if(UtilityHelperClass.getIntegerFromPreference(getResources().getString(R.string.list_init), getApplicationContext())==0){
+                        myLocationsList.setLocations(tempLoc);
+                    }
+                    else{
+                        if(myLocationsList.getLocations().size()==0){
+                            myLocationsList.setLocations(tempLoc);
+                        }
+                        else{
+                            tempLoc = myLocationsList.getLocations();
+                        }
+
+                    }
                     tempLocation.setName(input.getText().toString());
                     tempLocation.setLocationLatitude(latLng.latitude);
                     tempLocation.setLocationLongitude(latLng.longitude);
 
                     if(pickedMarkerBlue){
-                        tempLocation.setMarkerColor("BLUE");
-//                        myLocationsList.getLocations().add(tempLocation);
+                        tempLocation.setMarkerColor(MarkersClass.BLUE_MARKER_INT);
+                        tempLoc.add(tempLocation);
+
+                        myLocationsList.setLocations(tempLoc);
+                        UtilityHelperClass.saveLocationListInSharedPreferences(myLocationsList, getApplicationContext());
+                        UtilityHelperClass.saveIntegerInPreference(getResources().getString(R.string.list_init), 1, getApplicationContext());
+
                         displayDialogOneButton("SAVED", "Your location with name:\n"+input.getText().toString()+"\nis saved!", "DISMISS");
 
-                        addMarkerOnMap(latLng, input.getText().toString(), "BLUE");
+                        addMarkerOnMap(latLng, input.getText().toString(), MarkersClass.BLUE_MARKER_INT);
+
+                        menuCounter.setText(String.valueOf(myLocationsList.getLocations().size()));
 
                     }
                     else if(pickedMarkerGreen){
-                        tempLocation.setMarkerColor("GREEN");
-//                        myLocationsList.getLocations().add(tempLocation);
+                        tempLocation.setMarkerColor(MarkersClass.GREEN_MARKER_INT);
+                        tempLoc.add(tempLocation);
+
+                        myLocationsList.setLocations(tempLoc);
+                        UtilityHelperClass.saveLocationListInSharedPreferences(myLocationsList, getApplicationContext());
+                        UtilityHelperClass.saveIntegerInPreference(getResources().getString(R.string.list_init), 1, getApplicationContext());
+
                         displayDialogOneButton("SAVED", "Your location with name:\n"+input.getText().toString()+"\nis saved!", "DISMISS");
 
-                        addMarkerOnMap(latLng, input.getText().toString(), "GREEN");
+                        addMarkerOnMap(latLng, input.getText().toString(), MarkersClass.GREEN_MARKER_INT);
+
+                        menuCounter.setText(String.valueOf(myLocationsList.getLocations().size()));
                     }
                     else{
                         displayDialogOneButton("OOPS!!!", "It looks like your marker selection is not set.\nClick + button to pick a marker.", "DISMISS");
@@ -560,17 +627,138 @@ public class MainActivity extends AppCompatActivity
         builder.show();
     }
 
-    private void addMarkerOnMap(LatLng latlng, String name, String color){
+    private void displayDialogEditLocation(String title, String leftBtn, String rightBtn, final int position){
+        final AlertDialog.Builder builder =
+                new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        final EditText input = new EditText(MainActivity.this);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT);
+        input.setLayoutParams(lp);
+        builder.setView(input);
+        builder.setPositiveButton(rightBtn, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+                if(input.getText().length()!=0){
+                    myLocationsList.getLocations().get(position).setName(input.getText().toString());
+                    listView.setAdapter(new ADAPTER_LocationList(MainActivity.this, myLocationsList.getLocations()));
+                    UtilityHelperClass.saveLocationListInSharedPreferences(myLocationsList, getApplicationContext());
+                    displayDialogOneButton("SAVED", "Your location with name:\n"+input.getText().toString()+"\nis saved!", "DISMISS");
+                }
+                else {
+                    displayDialogOneButton("ERROR", "Name is Empty!!!", "DISMISS");
+                }
 
-        if(color.equals("BLUE")){
-            mMap.addMarker(new MarkerOptions().position(latlng)
-                    .title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_location_on_blue_24dp)));
+            }
+        });
+        builder.setNegativeButton(leftBtn, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+
+            }
+        });
+
+        builder.show();
+    }
+
+    private void displayRemoveEntry (String title, String message, String leftBtn, String rightBtn, final int position){
+        final AlertDialog.Builder builder =
+                new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setMessage(message);
+        builder.setPositiveButton(rightBtn, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+                LocationList tempList = new LocationList();
+                ArrayList<Location> loc = new ArrayList<Location>();
+                String deletedName = "";
+                for(int d = 0; d<myLocationsList.getLocations().size(); d++){
+                    if(d!=position){
+                        loc.add(myLocationsList.getLocations().get(d));
+                    }
+                    else{
+                        deletedName = myLocationsList.getLocations().get(d).getName();
+                    }
+                }
+                tempList.setLocations(loc);
+                myLocationsList = tempList;
+                UtilityHelperClass.saveLocationListInSharedPreferences(myLocationsList, getApplicationContext());
+
+                if(myLocationsList.getLocations().size()!=0){
+                    listView.setAdapter(new ADAPTER_LocationList(MainActivity.this, myLocationsList.getLocations()));
+                }
+                else{
+                    listView.setVisibility(View.GONE);
+                    emptyList.setVisibility(View.VISIBLE);
+                }
+
+
+                menuCounter.setText(String.valueOf(myLocationsList.getLocations().size()));
+
+                displayDialogOneButton("SUCCESS", "You successfully removed location with name \""+deletedName+"\"!", "DISMISS");
+
+            }
+        });
+        builder.setNegativeButton(leftBtn, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+
+            }
+        });
+
+        builder.show();
+    }
+
+    private void setResetMarkersOnMap(){
+
+        ArrayList <Marker> markers = new ArrayList<>();
+        if(myLocationsList.getLocations().size()!=0){
+            for(int i =0; i <myLocationsList.getLocations().size(); i++){
+                if(myLocationsList.getLocations().get(i).getMarkerColor()== MarkersClass.GREEN_MARKER_INT){
+                    markers.add(addMarkerOnMap(new LatLng(myLocationsList.getLocations().get(i).getLocationLatitude(), myLocationsList.getLocations().get(i).getLocationLongitude()), myLocationsList.getLocations().get(i).getName(), MarkersClass.GREEN_MARKER_INT));
+                }
+                else if(myLocationsList.getLocations().get(i).getMarkerColor()== MarkersClass.BLUE_MARKER_INT){
+                    markers.add(addMarkerOnMap(new LatLng(myLocationsList.getLocations().get(i).getLocationLatitude(), myLocationsList.getLocations().get(i).getLocationLongitude()), myLocationsList.getLocations().get(i).getName(), MarkersClass.BLUE_MARKER_INT));
+                }
+            }
+            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+            for (Marker marker : markers) {
+                builder.include(marker.getPosition());
+            }
+            LatLngBounds bounds = builder.build();
+
+            int padding = 100; // offset from edges of the map in pixels
+            CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+
+            mMap.moveCamera(cu);
+            mMap.animateCamera(cu);
+
+        }
+    }
+
+    private void clearMarkersFromMap(){
+        mMap.clear();
+    }
+
+
+    private Marker addMarkerOnMap(LatLng latlng, String name, int color){
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
+        if(color==MarkersClass.BLUE_MARKER_INT){
+
+            mMap.addMarker(new MarkerOptions().position(latlng).title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_location_on_blue_36dp)));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
+            return mMap.addMarker(new MarkerOptions().position(latlng).title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_location_on_blue_36dp)).visible(false));
         }
         else{
-            mMap.addMarker(new MarkerOptions().position(latlng)
-                    .title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_location_on_green_24dp)));
+            mMap.addMarker(new MarkerOptions().position(latlng).title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_location_on_green_36dp)));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
+            return mMap.addMarker(new MarkerOptions().position(latlng).title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_location_on_green_36dp)).visible(false));
         }
 
 
@@ -603,4 +791,88 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private void textViewBlink(Boolean isGreen){
+
+        if(isGreen){
+            markerIndicator.setTextColor(getResources().getColor(R.color.colorGreen));
+            markerIndicator.setText("Green Marker Icon Selected");
+        }
+        else{
+            markerIndicator.setTextColor(getResources().getColor(R.color.colorBlue));
+            markerIndicator.setText("Blue Marker Icon Selected");
+        }
+
+        Animation anim = new AlphaAnimation(0.0f, 1.0f);
+        final Animation animRev = new AlphaAnimation(1.0f, 0.0f);
+        anim.setDuration(300); //You can manage the blinking time with this parameter
+        anim.setStartOffset(20);
+        anim.setRepeatMode(Animation.REVERSE);
+        anim.setRepeatCount(0);
+
+        animRev.setDuration(500); //You can manage the blinking time with this parameter
+        animRev.setStartOffset(20);
+        animRev.setRepeatMode(Animation.REVERSE);
+        animRev.setRepeatCount(0);
+
+
+        anim.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                markerIndicator.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                markerIndicator.startAnimation(animRev);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+
+        animRev.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                markerIndicator.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                markerIndicator.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        markerIndicator.startAnimation(anim);
+    }
+
+    private void adapterAction(){
+        if(UtilityHelperClass.getIntegerFromPreference(getResources().getString(R.string.list_init), getApplicationContext())==0){
+            listView.setVisibility(View.GONE);
+            emptyList.setVisibility(View.VISIBLE);
+        }
+        else{
+
+            if(myLocationsList.getLocations().size()==0){
+                listView.setVisibility(View.GONE);
+                emptyList.setVisibility(View.VISIBLE);
+            }
+            else{
+
+
+                listView.setVisibility(View.VISIBLE);
+                emptyList.setVisibility(View.GONE );
+
+                listView.setAdapter(new ADAPTER_LocationList(this, myLocationsList.getLocations()));
+            }
+        }
+
+
+
+    }
 }

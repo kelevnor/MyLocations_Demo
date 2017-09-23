@@ -10,6 +10,10 @@ import com.cvapplication.kelevnor.mylocations.R;
  */
 
 public class MarkersClass {
+
+    public static int BLUE_MARKER_INT = 1;
+    public static int GREEN_MARKER_INT = 2;
+
     public static Drawable GREEN_MARKER(Context context){
         return context.getResources().getDrawable(R.drawable.ic_location_on_green_48dp);
     }

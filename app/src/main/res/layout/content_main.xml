@@ -34,7 +34,19 @@
         <com.baoyz.swipemenulistview.SwipeMenuListView
             android:id="@+id/listView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:divider="@null"
+            android:dividerHeight="0dp"/>
+        <TextView
+            android:id="@+id/tv_empty_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:background="@color/colorTextMedium"
+            android:textColor="@color/colorText555"
+            android:visibility="gone"
+            android:text="@string/list_empty"/>
 
     </RelativeLayout>
     <RelativeLayout
@@ -47,5 +59,21 @@
             class="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+
+        <TextView
+            android:id="@+id/tv_marker_pick_indicator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Blue Marker Icon Selected"
+            android:layout_marginTop="18dp"
+            android:visibility="gone"
+            android:textStyle="bold"
+            android:paddingRight="50dp"
+            android:gravity="center_horizontal"
+            android:textSize="@dimen/text_label"/>
+
+
+
+
     </RelativeLayout>
 </android.support.constraint.ConstraintLayout>
