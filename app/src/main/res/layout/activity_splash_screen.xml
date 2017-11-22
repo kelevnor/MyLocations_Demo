@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorNabBackground"
+    android:background="@color/palepurple"
     tools:context="com.cvapplication.kelevnor.mylocations.SplashScreen">
 
-    <ImageView
-        android:layout_width="250dp"
+    <TextView
+        android:layout_width="match_parent"
         android:layout_height="250dp"
         android:layout_marginTop="100dp"
-        android:src="@drawable/splashimage"
+        android:text="VAGIOS \nLOCATIONS"
+        android:textSize="30dp"
+        android:textStyle="bold"
+        android:textColor="@color/colorWhite"
+        android:gravity="center"
         android:layout_centerHorizontal="true"/>
 
 
