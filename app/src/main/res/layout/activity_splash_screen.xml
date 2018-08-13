@@ -3,20 +3,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/palepurple"
+    android:background="@color/colorF0"
     tools:context="com.cvapplication.kelevnor.mylocations.SplashScreen">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="250dp"
         android:layout_marginTop="100dp"
-        android:text="VAGIOS \nLOCATIONS"
+        android:text="METAWEATHER \nDEMO APP"
         android:textSize="30dp"
         android:textStyle="bold"
-        android:textColor="@color/colorWhite"
+        android:textColor="@color/colorGreyMediumDarker"
         android:gravity="center"
         android:layout_centerHorizontal="true"/>
-
 
     <TextView
         android:layout_width="wrap_content"

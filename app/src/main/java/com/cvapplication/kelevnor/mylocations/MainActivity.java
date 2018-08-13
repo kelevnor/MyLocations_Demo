@@ -2,18 +2,25 @@ package com.cvapplication.kelevnor.mylocations;
 
 import android.Manifest;
 
+import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatDialog;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -27,80 +34,79 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.baoyz.swipemenulistview.SwipeMenu;
 import com.baoyz.swipemenulistview.SwipeMenuCreator;
 import com.baoyz.swipemenulistview.SwipeMenuItem;
 import com.baoyz.swipemenulistview.SwipeMenuListView;
+import com.cvapplication.kelevnor.mylocations.ADAPTER.ADAPTER_LocationItem;
+import com.cvapplication.kelevnor.mylocations.REST.PullLocationData;
+import com.cvapplication.kelevnor.mylocations.REST.PullLocationQueryData;
+import com.cvapplication.kelevnor.mylocations.Utils.Config;
+import com.cvapplication.kelevnor.mylocations.Utils.LocationUtility.FallbackLocationTracker;
+import com.cvapplication.kelevnor.mylocations.Utils.LocationUtility.LocationTracker;
+import com.cvapplication.kelevnor.mylocations.Utils.LocationUtility.ProviderLocationTracker;
+import com.cvapplication.kelevnor.mylocations.Utils.PermissionUtils;
 import com.cvapplication.kelevnor.mylocations.Utils.UtilityHelperClass;
-import com.cvapplication.kelevnor.mylocations.adapter.ADAPTER_LocationList;
-import com.cvapplication.kelevnor.mylocations.models.MarkersClass;
-import com.cvapplication.kelevnor.mylocations.models.objects.Location;
-import com.cvapplication.kelevnor.mylocations.models.objects.LocationList;
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
+import com.cvapplication.kelevnor.mylocations.Utils.UtilityHelper_Permissions;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
+import java.util.List;
+
+/**
+ *
+ * Marios Sifalakis 08/13/2018
+ * Main Activity of the application. It contains three views, immitating FragmentTransactions
+ * CheckLocation view is the main view of the app
+ * Click  the floating actionbar to add a location through query or coordinates
+ */
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,GoogleMap.OnMyLocationButtonClickListener,
-        OnMapReadyCallback,
-        ActivityCompat.OnRequestPermissionsResultCallback, Animation.AnimationListener, SwipeMenuListView.OnMenuItemClickListener, View.OnClickListener, GoogleMap.OnMapLongClickListener {
-    /**
-     * Request code for location permission request.
-     *
-     * @see #onRequestPermissionsResult(int, String[], int[])
-     */
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+        OnMapReadyCallback,  UtilityHelper_Permissions.OnAsyncResult,
+        ActivityCompat.OnRequestPermissionsResultCallback, Animation.AnimationListener, SwipeMenuListView.OnMenuItemClickListener, View.OnClickListener, GoogleMap.OnMapLongClickListener, SeekBar.OnSeekBarChangeListener, ADAPTER_LocationItem.onItemClickListener {
 
-    private boolean hasPickedMarker = false;
-    private boolean pickedMarkerBlue = false;
-    private boolean pickedMarkerGreen = false;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
     private boolean inSettings = false;
     private boolean inList = false;
     private boolean inMap = true;
-    /**
-     * Flag indicating whether a requested permission has been denied after returning in
-     * {@link #onRequestPermissionsResult(int, String[], int[])}.
-     */
     private boolean mPermissionDenied = false;
 
     private GoogleMap mMap;
 
-    RelativeLayout mapRl, settingsRl, storedListRl;
+    int TYPE_ADD = 111;
+    int TYPE_NORMAL = 211;
+    int DEFAULT_TYPE  = TYPE_NORMAL;
+    android.support.v7.widget.RecyclerView lv;
+    android.support.v7.widget.RecyclerView lv_log;
+    LinearLayout mapRl;
+    RelativeLayout settingsRl, storedListRl;
     FloatingActionButton fabMain, fabTop, fabBottom;
-
-    TextView menuCounter;
+    Dialog dialog;
+    TextView menuCounter, latlongfab, queryfab;
 
     private Boolean isFabOpen = false;
-    private Animation fab_open,fab_close,rotate_forward,rotate_backward;
+    private Animation rotate_forward,rotate_backward;
 
     SwipeMenuListView listView;
 
-    TextView markerIndicator, emptyList;
-    ImageView blueSelect, greenSelect, blueSelectHeight, greenSelectHeight;
-    LocationList myLocationsList;
-
+    SeekBar timeVariantSB;
+    TextView emptyList, emptyActivityList, timeValue;
+    ADAPTER_LocationItem listAdapter;
+    UtilityHelper_Permissions utilityPermissions;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -110,21 +116,26 @@ public class MainActivity extends AppCompatActivity
 
         setContentView(R.layout.activity_main);
 
-        mapRl = (RelativeLayout) findViewById(R.id.rl_map);
-        settingsRl = (RelativeLayout) findViewById(R.id.rl_settings);
-        storedListRl = (RelativeLayout) findViewById(R.id.rl_storedlocations);
+        timeVariantSB = findViewById(R.id.sb_timevariant);
+        timeValue = findViewById(R.id.tv_timevalue);
+        timeValue = findViewById(R.id.tv_timevalue);
+        utilityPermissions = new UtilityHelper_Permissions(this, this);
 
-        markerIndicator = (TextView) findViewById(R.id.tv_marker_pick_indicator);
-        emptyList = (TextView) findViewById(R.id.tv_empty_list);
+        mapRl = findViewById(R.id.ll_map);
+        settingsRl = findViewById(R.id.rl_settings);
+        storedListRl = findViewById(R.id.rl_storedlocations);
+        listAdapter = new ADAPTER_LocationItem(MainActivity.this, Config.storedActivityLog, MainActivity.this);
 
-        blueSelect = (ImageView) findViewById(R.id.iv_blue_selected);
-        greenSelect = (ImageView) findViewById(R.id.iv_green_selected);
+        latlongfab = findViewById(R.id.tv_latlong);
+        queryfab = findViewById(R.id.tv_query);
+        emptyList = findViewById(R.id.tv_empty_list);
+        emptyActivityList = findViewById(R.id.tv_empty_activity_list);
 
-        blueSelectHeight = (ImageView) findViewById(R.id.iv_blue_selected_height);
-        greenSelectHeight = (ImageView) findViewById(R.id.iv_green_selected_height);
-        listView = (SwipeMenuListView) findViewById(R.id.listView);
+        listView = findViewById(R.id.listView);
 
-        Log.e("TEST_GIT","TEST_GIT");
+        lv_log = findViewById(R.id.rv_activitylog);
+
+//        lv_log.setVisibility(View.GONE);
         // set creator
         listView.setMenuCreator(creator);
 
@@ -135,73 +146,101 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        fabMain = findViewById(R.id.fabmain);
+        fabTop = findViewById(R.id.fabtop);
+        fabBottom = findViewById(R.id.fabbottom);
 
-
-        fabMain = (FloatingActionButton) findViewById(R.id.fabmain);
-        fabTop = (FloatingActionButton) findViewById(R.id.fabtop);
-        fabBottom = (FloatingActionButton) findViewById(R.id.fabbottom);
-
-        fab_open = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_open);
-        fab_close = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.fab_close);
         rotate_forward = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.rotate_forward);
         rotate_backward = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.rotate_backward);
 
+        latlongfab.setOnClickListener(this);
+        queryfab.setOnClickListener(this);
         fabTop.setOnClickListener(this);
         fabBottom.setOnClickListener(this);
         fabMain.setOnClickListener(this);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        timeVariantSB.setOnSeekBarChangeListener(this);
+
+        timeVariantSB.setProgress(60);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setItemIconTintList(null);
+
 
         menuCounter =(TextView) MenuItemCompat.getActionView(navigationView.getMenu().
                 findItem(R.id.nav_locationlist));
 
-        String[] values  = new String[]{"60 Paulou Mela, GR, 25100", "13 Ergotimou, GR, 27687"};
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, android.R.id.text1, values);
-
-        listView.setAdapter(adapter);
         listView.setOnMenuItemClickListener(this);
 
-        if(UtilityHelperClass.getIntegerFromPreference(getResources().getString(R.string.list_init), getApplicationContext())==0){
-            myLocationsList = new LocationList();
-            displayDialogOneButton("WELCOME","Apply long clicks on the map to add\nmarkers and manage them in a list!\nWhile on map view, click + button\nto pick a marker","DISMISS");
+        final String PREFS_NAME = "MyPrefsFile";
+
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+
+        if (settings.getBoolean("my_first_time", true)) {
+            //the app is being launched for first time, do something
+            Log.d("Comments", "First time");
+            // record the fact that the app has been started at least once
+            displayDialogOneButton("WELCOME","Enable Location Update Service to \nperiodically store your location and \ncheck the weather. \n\nYou can also pick locations and \nstore them, not just in the activity \nlog, but also in a personalized list","DISMISS");
             menuCounter.setText("0");
+            Config.storedActivityLog = new ArrayList<>();
+            emptyActivityList.setVisibility(View.VISIBLE);
+            lv_log.setVisibility(View.GONE);
+            UtilityHelperClass.saveLocationListInSharedPreferences(new ArrayList<com.cvapplication.kelevnor.mylocations.MODELS.locations_list.Location>(), getApplicationContext());
+            settings.edit().putBoolean("my_first_time", false).commit();
         }
         else{
-            myLocationsList = UtilityHelperClass.getLocationListFromSharedPreferences(getApplicationContext());
-            if(myLocationsList.getLocations().size()==0){
-                displayDialogOneButton("EMPTY","Start Long Clicking to add locations to your list!","DISMISS");
+            Config.storedActivityLog = UtilityHelperClass.getLocationListFromSharedPreferences(getApplicationContext());
+            if(Config.storedActivityLog.size()==0){
+                displayDialogOneButton("WELCOME","Enable Location Update Service to \nperiodically store your location and \ncheck the weather. \n\nYou can also pick locations and \nstore them, not just in the activity \nlog, but also in a personalized list","DISMISS");
                 menuCounter.setText("0");
+                emptyActivityList.setVisibility(View.VISIBLE);
+                lv_log.setVisibility(View.GONE);
             }
             else{
-                //show markers
-                menuCounter.setText(String.valueOf(myLocationsList.getLocations().size()));
+                //show locations
+                emptyActivityList.setVisibility(View.GONE);
+                lv_log.setVisibility(View.VISIBLE);
+
+                RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(MainActivity.this, LinearLayoutManager.VERTICAL, false);
+                lv_log.setLayoutManager(mLayoutManager);
+                lv_log.setItemAnimator(new DefaultItemAnimator());
+                listAdapter = new ADAPTER_LocationItem(MainActivity.this, Config.storedActivityLog, MainActivity.this);
+                lv_log.setAdapter(listAdapter);
+                menuCounter.setText(String.valueOf(Config.storedActivityLog.size()));
             }
         }
+
+
     }
 
     /**
      * Enables the My Location layer if the fine location permission has been granted.
      */
     private void enableMyLocation() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            // Permission to access the location is missing.
-            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
-                    Manifest.permission.ACCESS_FINE_LOCATION, true);
-        } else if (mMap != null) {
-            // Access to the location has been granted to the app.
-            mMap.setMyLocationEnabled(true);
+        int MyVersion = Build.VERSION.SDK_INT;
+        if (MyVersion > Build.VERSION_CODES.M) {
+//            utilityPermissions.CheckGenericPermissions();
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                // Permission to access the location is missing.
+                PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
+                        Manifest.permission.ACCESS_FINE_LOCATION, true);
+            } else if (mMap != null) {
+                // Access to the location has been granted to the app.
+                mMap.setMyLocationEnabled(true);
+            }
         }
+        else{
+            mMap.setMyLocationEnabled(true);
+
+        }
+
     }
 
     @Override
@@ -211,7 +250,7 @@ public class MainActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
 
-            displayDialogTwoButtons("EXIT", "Are you sure you want to exit?", "NO", "YES");
+            displayDialogTwoButtonsBackClicked("EXIT", "Are you sure you want to exit?", "NO", "YES");
         }
     }
 
@@ -229,13 +268,7 @@ public class MainActivity extends AppCompatActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_reset_marker_on_map) {
-            clearMarkersFromMap();
-            setResetMarkersOnMap();
-            return true;
-        }
-        else if (id == R.id.action_clear_markers) {
+        if (id == R.id.action_clear_markers) {
             clearMarkersFromMap();
             return true;
         }
@@ -257,26 +290,9 @@ public class MainActivity extends AppCompatActivity
             fabMain.show();
             fabTop.hide();
             fabBottom.hide();
-            if(hasPickedMarker){
-                if(pickedMarkerBlue){
-                    greenSelect.setVisibility(View.GONE);
-                    blueSelect.setVisibility(View.VISIBLE);
-                    greenSelectHeight.setVisibility(View.GONE);
-                    blueSelectHeight.setVisibility(View.VISIBLE);
-                }
-                else if(pickedMarkerGreen){
-                    greenSelect.setVisibility(View.VISIBLE);
-                    blueSelect.setVisibility(View.GONE);
-                    greenSelectHeight.setVisibility(View.VISIBLE);
-                    blueSelectHeight.setVisibility(View.GONE);
-                }
-                else{
-                    greenSelect.setVisibility(View.GONE);
-                    blueSelect.setVisibility(View.GONE);
-                    greenSelectHeight.setVisibility(View.GONE);
-                    blueSelectHeight.setVisibility(View.GONE);
-                }
-            }
+            queryfab.setVisibility(View.INVISIBLE);
+            latlongfab.setVisibility(View.INVISIBLE);
+
         } else if (id == R.id.nav_locationlist) {
             navigationSetViewsStoreBoolean(item);
             if(isFabOpen){
@@ -285,12 +301,10 @@ public class MainActivity extends AppCompatActivity
             fabMain.hide();
             fabTop.hide();
             fabBottom.hide();
-            greenSelect.setVisibility(View.GONE);
-            blueSelect.setVisibility(View.GONE);
-            greenSelectHeight.setVisibility(View.GONE);
-            blueSelectHeight.setVisibility(View.GONE);
+            queryfab.setVisibility(View.INVISIBLE);
+            latlongfab.setVisibility(View.INVISIBLE);
 
-            adapterAction();
+//            adapterAction();
 
         } else if (id == R.id.nav_settings) {
             navigationSetViewsStoreBoolean(item);
@@ -300,10 +314,8 @@ public class MainActivity extends AppCompatActivity
             fabMain.hide();
             fabTop.hide();
             fabBottom.hide();
-            greenSelect.setVisibility(View.GONE);
-            blueSelect.setVisibility(View.GONE);
-            greenSelectHeight.setVisibility(View.GONE);
-            blueSelectHeight.setVisibility(View.GONE);
+            queryfab.setVisibility(View.INVISIBLE);
+            latlongfab.setVisibility(View.INVISIBLE);
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -322,24 +334,6 @@ public class MainActivity extends AppCompatActivity
         mMap.setOnMyLocationButtonClickListener(this);
         enableMyLocation();
         mMap.setOnMapLongClickListener(this);
-    }
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) {
-            return;
-        }
-
-        if (PermissionUtils.isPermissionGranted(permissions, grantResults,
-                Manifest.permission.ACCESS_FINE_LOCATION)) {
-            // Enable the my location layer if the permission has been granted.
-            enableMyLocation();
-        } else {
-            // Display the missing permission error dialog when the fragments resume.
-            mPermissionDenied = true;
-        }
     }
 
     @Override
@@ -416,11 +410,10 @@ public class MainActivity extends AppCompatActivity
         switch (index) {
             case 0:
                 // edit
-                displayDialogEditLocation("Change the name of Location, \""+myLocationsList.getLocations().get(position).getName()+"\" to ", "CANCEL", "CHANGE", position);
                 break;
             case 1:
                 // delete
-                displayRemoveEntry("REMOVE ENTRY","Would you like to remove \"" + myLocationsList.getLocations().get(position).getName() + "\" ?","CANCEL","REMOVE",position);
+
                 break;
         }
         // false : close the menu; true : not close the menu
@@ -433,29 +426,31 @@ public class MainActivity extends AppCompatActivity
             case R.id.fabmain:
                 animateFAB();
                 break;
-            case R.id.fabtop:
-                Log.d("Marios", "Fab 1");
-                greenSelect.setVisibility(View.GONE);
-                blueSelect.setVisibility(View.VISIBLE);
-                greenSelectHeight.setVisibility(View.GONE);
-                blueSelectHeight.setVisibility(View.VISIBLE);
-                hasPickedMarker = true;
-                pickedMarkerBlue = true;
-                pickedMarkerGreen = false;
+
+            case R.id.tv_query:
                 animateFAB();
-                textViewBlink(false);
+                displayDialogAddLocationName("Add your location", "Cancel" ,"Search");
+
                 break;
-            case R.id.fabbottom:
-                Log.d("Marios", "Fab 2");
-                greenSelect.setVisibility(View.VISIBLE);
-                blueSelect.setVisibility(View.GONE);
-                greenSelectHeight.setVisibility(View.VISIBLE);
-                blueSelectHeight.setVisibility(View.GONE);
-                hasPickedMarker = true;
-                pickedMarkerGreen = true;
-                pickedMarkerBlue = false;
+            case R.id.tv_latlong:
                 animateFAB();
-                textViewBlink(true);
+                Location loc = null;
+                LocationTracker lt = new FallbackLocationTracker(this, ProviderLocationTracker.ProviderType.NETWORK);
+
+                if (lt.hasLocation()) {
+                    loc = lt.getLocation();
+                    Log.e("lt LAT/LONG", String.valueOf(loc.getLatitude()) + " / " + String.valueOf(loc.getLongitude()));
+
+                    new PullLocationData(loc.getLatitude(), loc.getLongitude(), pullCoordinates);
+                } else {
+                    if (lt.hasPossiblyStaleLocation()) {
+                        loc = lt.getPossiblyStaleLocation();
+                        new PullLocationData(loc.getLatitude(), loc.getLongitude(), pullCoordinates);
+                        Log.e("STALE lt LAT/LONG", String.valueOf(loc.getLatitude()) + " / " + String.valueOf(loc.getLongitude()));
+                    } else {
+                        Log.e("NO LOCATION FOUND", "NO LOCATION FOUND");
+                    }
+                }
                 break;
         }
     }
@@ -469,19 +464,17 @@ public class MainActivity extends AppCompatActivity
 
         if(isFabOpen){
             fabMain.startAnimation(rotate_backward);
-            fabTop.startAnimation(fab_close);
-            fabBottom.startAnimation(fab_close);
             fabTop.setClickable(false);
             fabBottom.setClickable(false);
+            latlongfab.setVisibility(View.INVISIBLE);
+            queryfab.setVisibility(View.INVISIBLE);
             isFabOpen = false;
             Log.d("Marios", "close");
 
         } else {
             fabMain.startAnimation(rotate_forward);
-            fabTop.startAnimation(fab_open);
-            fabBottom.startAnimation(fab_open);
-            fabTop.setClickable(true);
-            fabBottom.setClickable(true);
+            latlongfab.setVisibility(View.VISIBLE);
+            queryfab.setVisibility(View.VISIBLE);
             isFabOpen = true;
             Log.d("Marios","open");
 
@@ -491,17 +484,44 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapLongClick(LatLng latLng) {
 
-        if(hasPickedMarker){
-            displayDialogAddMarkerName("ENTER NAME:", "CANCEL", "ADD", latLng);
-        }
-        else{
-            displayDialogOneButton("OOPS!!!","You need to pick a marker icon.\nClick + button to pick a marker.", "DISMISS");
-        }
-
-
     }
 
-    private void displayDialogTwoButtons (String title, String message, String leftBtn, String rightBtn){
+    private void displayDialogTwoButtons (String title, String message, String leftBtn, String rightBtn, final com.cvapplication.kelevnor.mylocations.MODELS.locations_list.Location loc){
+        final AlertDialog.Builder builder =
+                new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setMessage(message);
+        builder.setPositiveButton(rightBtn, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+                Config.storedActivityLog.add(loc);
+                emptyActivityList.setVisibility(View.GONE);
+                lv_log.setVisibility(View.VISIBLE);
+                listAdapter = new ADAPTER_LocationItem(MainActivity.this, Config.storedActivityLog, MainActivity.this);
+                lv_log.setAdapter(listAdapter);
+                RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(MainActivity.this, LinearLayoutManager.VERTICAL, false);
+                lv_log.setLayoutManager(mLayoutManager);
+                lv_log.setItemAnimator(new DefaultItemAnimator());
+                DEFAULT_TYPE = TYPE_NORMAL;
+                menuCounter.setText(String.valueOf(Config.storedActivityLog.size()));
+                UtilityHelperClass.saveStringInPreference(getResources().getString(R.string.list_init),"NOT_NA", getApplicationContext());
+                UtilityHelperClass.saveLocationListInSharedPreferences(Config.storedActivityLog, getApplicationContext());
+
+            }
+        });
+        builder.setNegativeButton(leftBtn, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+
+            }
+        });
+
+        builder.show();
+    }
+
+    private void displayDialogTwoButtonsBackClicked (String title, String message, String leftBtn, String rightBtn){
         final AlertDialog.Builder builder =
                 new AlertDialog.Builder(this);
         builder.setTitle(title);
@@ -540,7 +560,7 @@ public class MainActivity extends AppCompatActivity
 
         builder.show();
     }
-    private void displayDialogAddMarkerName(String title, String leftBtn, String rightBtn, final LatLng latLng){
+    private void displayDialogAddLocationName(String title, String leftBtn, String rightBtn){
         final AlertDialog.Builder builder =
                 new AlertDialog.Builder(this);
         builder.setTitle(title);
@@ -557,57 +577,13 @@ public class MainActivity extends AppCompatActivity
 
                 if(input.getText().length()!=0){
 
-                    Location tempLocation = new Location();
-
-                    ArrayList<Location> tempLoc = new ArrayList<>();
-
-                    if(UtilityHelperClass.getIntegerFromPreference(getResources().getString(R.string.list_init), getApplicationContext())==0){
-                        myLocationsList.setLocations(tempLoc);
+                    if(UtilityHelperClass.isNetworkAvailable(getApplicationContext())){
+                        Log.e("Connection Avail", "Connection Avail");
+                        new PullLocationQueryData(input.getText().toString(), pullQuery);
                     }
-                    else{
-                        if(myLocationsList.getLocations().size()==0){
-                            myLocationsList.setLocations(tempLoc);
-                        }
-                        else{
-                            tempLoc = myLocationsList.getLocations();
-                        }
-
-                    }
-                    tempLocation.setName(input.getText().toString());
-                    tempLocation.setLocationLatitude(latLng.latitude);
-                    tempLocation.setLocationLongitude(latLng.longitude);
-
-                    if(pickedMarkerBlue){
-                        tempLocation.setMarkerColor(MarkersClass.BLUE_MARKER_INT);
-                        tempLoc.add(tempLocation);
-
-                        myLocationsList.setLocations(tempLoc);
-                        UtilityHelperClass.saveLocationListInSharedPreferences(myLocationsList, getApplicationContext());
-                        UtilityHelperClass.saveIntegerInPreference(getResources().getString(R.string.list_init), 1, getApplicationContext());
-
-                        displayDialogOneButton("SAVED", "Your location with name:\n"+input.getText().toString()+"\nis saved!", "DISMISS");
-
-                        addMarkerOnMap(latLng, input.getText().toString(), MarkersClass.BLUE_MARKER_INT);
-
-                        menuCounter.setText(String.valueOf(myLocationsList.getLocations().size()));
-
-                    }
-                    else if(pickedMarkerGreen){
-                        tempLocation.setMarkerColor(MarkersClass.GREEN_MARKER_INT);
-                        tempLoc.add(tempLocation);
-
-                        myLocationsList.setLocations(tempLoc);
-                        UtilityHelperClass.saveLocationListInSharedPreferences(myLocationsList, getApplicationContext());
-                        UtilityHelperClass.saveIntegerInPreference(getResources().getString(R.string.list_init), 1, getApplicationContext());
-
-                        displayDialogOneButton("SAVED", "Your location with name:\n"+input.getText().toString()+"\nis saved!", "DISMISS");
-
-                        addMarkerOnMap(latLng, input.getText().toString(), MarkersClass.GREEN_MARKER_INT);
-
-                        menuCounter.setText(String.valueOf(myLocationsList.getLocations().size()));
-                    }
-                    else{
-                        displayDialogOneButton("OOPS!!!", "It looks like your marker selection is not set.\nClick + button to pick a marker.", "DISMISS");
+                    else if(!UtilityHelperClass.isNetworkAvailable(getApplicationContext())){
+                        Log.e("!Connection Avail", "!Connection Avail");
+                        displayDialogOneButton("Error","Could not establish Internet Connection","Dismiss");
                     }
                 }
                 else{
@@ -625,145 +601,18 @@ public class MainActivity extends AppCompatActivity
         });
 
         builder.show();
-    }
-
-    private void displayDialogEditLocation(String title, String leftBtn, String rightBtn, final int position){
-        final AlertDialog.Builder builder =
-                new AlertDialog.Builder(this);
-        builder.setTitle(title);
-        final EditText input = new EditText(MainActivity.this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT);
-        input.setLayoutParams(lp);
-        builder.setView(input);
-        builder.setPositiveButton(rightBtn, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.dismiss();
-                if(input.getText().length()!=0){
-                    myLocationsList.getLocations().get(position).setName(input.getText().toString());
-                    listView.setAdapter(new ADAPTER_LocationList(MainActivity.this, myLocationsList.getLocations()));
-                    UtilityHelperClass.saveLocationListInSharedPreferences(myLocationsList, getApplicationContext());
-                    displayDialogOneButton("SAVED", "Your location with name:\n"+input.getText().toString()+"\nis saved!", "DISMISS");
-                }
-                else {
-                    displayDialogOneButton("ERROR", "Name is Empty!!!", "DISMISS");
-                }
-
-            }
-        });
-        builder.setNegativeButton(leftBtn, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.dismiss();
-
-            }
-        });
-
-        builder.show();
-    }
-
-    private void displayRemoveEntry (String title, String message, String leftBtn, String rightBtn, final int position){
-        final AlertDialog.Builder builder =
-                new AlertDialog.Builder(this);
-        builder.setTitle(title);
-        builder.setMessage(message);
-        builder.setPositiveButton(rightBtn, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.dismiss();
-                LocationList tempList = new LocationList();
-                ArrayList<Location> loc = new ArrayList<Location>();
-                String deletedName = "";
-                for(int d = 0; d<myLocationsList.getLocations().size(); d++){
-                    if(d!=position){
-                        loc.add(myLocationsList.getLocations().get(d));
-                    }
-                    else{
-                        deletedName = myLocationsList.getLocations().get(d).getName();
-                    }
-                }
-                tempList.setLocations(loc);
-                myLocationsList = tempList;
-                UtilityHelperClass.saveLocationListInSharedPreferences(myLocationsList, getApplicationContext());
-
-                if(myLocationsList.getLocations().size()!=0){
-                    listView.setAdapter(new ADAPTER_LocationList(MainActivity.this, myLocationsList.getLocations()));
-                }
-                else{
-                    listView.setVisibility(View.GONE);
-                    emptyList.setVisibility(View.VISIBLE);
-                }
-
-
-                menuCounter.setText(String.valueOf(myLocationsList.getLocations().size()));
-
-                displayDialogOneButton("SUCCESS", "You successfully removed location with name \""+deletedName+"\"!", "DISMISS");
-
-            }
-        });
-        builder.setNegativeButton(leftBtn, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.dismiss();
-
-            }
-        });
-
-        builder.show();
-    }
-
-    private void setResetMarkersOnMap(){
-
-        ArrayList <Marker> markers = new ArrayList<>();
-        if(myLocationsList.getLocations().size()!=0){
-            for(int i =0; i <myLocationsList.getLocations().size(); i++){
-                if(myLocationsList.getLocations().get(i).getMarkerColor()== MarkersClass.GREEN_MARKER_INT){
-                    markers.add(addMarkerOnMap(new LatLng(myLocationsList.getLocations().get(i).getLocationLatitude(), myLocationsList.getLocations().get(i).getLocationLongitude()), myLocationsList.getLocations().get(i).getName(), MarkersClass.GREEN_MARKER_INT));
-                }
-                else if(myLocationsList.getLocations().get(i).getMarkerColor()== MarkersClass.BLUE_MARKER_INT){
-                    markers.add(addMarkerOnMap(new LatLng(myLocationsList.getLocations().get(i).getLocationLatitude(), myLocationsList.getLocations().get(i).getLocationLongitude()), myLocationsList.getLocations().get(i).getName(), MarkersClass.BLUE_MARKER_INT));
-                }
-            }
-            LatLngBounds.Builder builder = new LatLngBounds.Builder();
-            for (Marker marker : markers) {
-                builder.include(marker.getPosition());
-            }
-            LatLngBounds bounds = builder.build();
-
-            int padding = 100; // offset from edges of the map in pixels
-            CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
-
-            mMap.moveCamera(cu);
-            mMap.animateCamera(cu);
-
-        }
     }
 
     private void clearMarkersFromMap(){
-        mMap.clear();
+
+        Config.storedActivityLog.clear();
+        Config.storedActivityLog = new ArrayList<>();
+        UtilityHelperClass.saveLocationListInSharedPreferences(Config.storedActivityLog, getApplicationContext());
+
+        menuCounter.setText("0");
+        lv_log.setVisibility(View.GONE);
+        emptyActivityList.setVisibility(View.VISIBLE);
     }
-
-
-    private Marker addMarkerOnMap(LatLng latlng, String name, int color){
-
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
-        if(color==MarkersClass.BLUE_MARKER_INT){
-
-            mMap.addMarker(new MarkerOptions().position(latlng).title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_location_on_blue_36dp)));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
-            return mMap.addMarker(new MarkerOptions().position(latlng).title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_location_on_blue_36dp)).visible(false));
-        }
-        else{
-            mMap.addMarker(new MarkerOptions().position(latlng).title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_location_on_green_36dp)));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
-            return mMap.addMarker(new MarkerOptions().position(latlng).title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_location_on_green_36dp)).visible(false));
-        }
-
-
-    }
-
 
     private void navigationSetViewsStoreBoolean(MenuItem item){
         int id = item.getItemId();
@@ -791,88 +640,147 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void textViewBlink(Boolean isGreen){
-
-        if(isGreen){
-            markerIndicator.setTextColor(getResources().getColor(R.color.colorGreen));
-            markerIndicator.setText("Green Marker Icon Selected");
-        }
-        else{
-            markerIndicator.setTextColor(getResources().getColor(R.color.colorBlue));
-            markerIndicator.setText("Blue Marker Icon Selected");
-        }
-
-        Animation anim = new AlphaAnimation(0.0f, 1.0f);
-        final Animation animRev = new AlphaAnimation(1.0f, 0.0f);
-        anim.setDuration(300); //You can manage the blinking time with this parameter
-        anim.setStartOffset(20);
-        anim.setRepeatMode(Animation.REVERSE);
-        anim.setRepeatCount(0);
-
-        animRev.setDuration(500); //You can manage the blinking time with this parameter
-        animRev.setStartOffset(20);
-        animRev.setRepeatMode(Animation.REVERSE);
-        animRev.setRepeatCount(0);
-
-
-        anim.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-                markerIndicator.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                markerIndicator.startAnimation(animRev);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
-        });
-
-        animRev.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-                markerIndicator.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                markerIndicator.setVisibility(View.GONE);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
-        });
-        markerIndicator.startAnimation(anim);
-    }
 
     private void adapterAction(){
-        if(UtilityHelperClass.getIntegerFromPreference(getResources().getString(R.string.list_init), getApplicationContext())==0){
+        if(UtilityHelperClass.getStringFromPreference(getResources().getString(R.string.list_init), getApplicationContext()).equals("NA")){
             listView.setVisibility(View.GONE);
             emptyList.setVisibility(View.VISIBLE);
         }
         else{
 
-            if(myLocationsList.getLocations().size()==0){
-                listView.setVisibility(View.GONE);
-                emptyList.setVisibility(View.VISIBLE);
-            }
-            else{
-
-
-                listView.setVisibility(View.VISIBLE);
-                emptyList.setVisibility(View.GONE );
-
-                listView.setAdapter(new ADAPTER_LocationList(this, myLocationsList.getLocations()));
-            }
         }
 
 
 
     }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+        timeValue.setText("every "+convertToTime(i+10));
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    private String convertToTime(int number){
+       int minutes = (number % 3600) / 60;
+       int seconds = number % 60;
+       return String.valueOf(minutes)+" min "+ String.valueOf(seconds)+" sec";
+    }
+
+    //On result listener for PullLocationQueryData Api Call - to retreive location result from search?query metaweather data
+    PullLocationQueryData.OnAsyncResult pullQuery= new PullLocationQueryData.OnAsyncResult() {
+
+        @Override
+        public void onResultSuccess(int resultCode, List<com.cvapplication.kelevnor.mylocations.MODELS.locations_list.Location> locations) {
+
+            Boolean hasValues = false;
+            try {
+                Log.e("No# of Results:", String.valueOf(locations.size()));
+                hasValues = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if(hasValues&&locations.size()>0){
+                displayDialogTwoButtons("Success","Following Location Found: \n\nTitle: "+locations.get(0).getTitle()+" \nType: "+locations.get(0).getLocationType()+" \nCoordinates: "+locations.get(0).getLattLong()+" \n\nWould you like to add the location?","Cancel","Add",  locations.get(0));
+            }
+            else{
+                displayDialogOneButton("Oops", "No Locations found with that name!","Dismiss");
+            }
+
+        }
+
+        @Override
+        public void onResultFail(int resultCode, String errorResult) {
+            Log.e("FAIL_RESPONSE", errorResult);
+        }
+    };
+
+//On result listener for PullLocationQueryData Api Call - to retreive location result from search?coordinates metaweather data
+
+    PullLocationData.OnAsyncResult pullCoordinates= new PullLocationData.OnAsyncResult() {
+
+        @Override
+        public void onResultSuccess(int resultCode, List<com.cvapplication.kelevnor.mylocations.MODELS.locations_list.Location> locations) {
+
+            DEFAULT_TYPE = TYPE_ADD;
+            Boolean hasValues = false;
+            try {
+                Log.e("No# of Results:", String.valueOf(locations.size()));
+                hasValues = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.e("No# of Results:", "Something went wrong");
+            }
+
+            if(hasValues&&locations.size()>0){
+
+                dialog = new Dialog(MainActivity.this);
+                dialog.setContentView(R.layout.custom_list_locations);
+
+                dialog.setCancelable(true);
+                dialog.setTitle("ListView");
+                lv = (android.support.v7.widget.RecyclerView ) dialog.findViewById(R.id.rv_locationslist);
+                ADAPTER_LocationItem listAdapter = new ADAPTER_LocationItem(MainActivity.this, locations, MainActivity.this);
+                lv.setAdapter(listAdapter);
+                RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(MainActivity.this, LinearLayoutManager.VERTICAL, false);
+                lv.setLayoutManager(mLayoutManager);
+                lv.setItemAnimator(new DefaultItemAnimator());
+
+                dialog.show();
+            }
+            else{
+                displayDialogOneButton("Oops", "No Locations found with that name!","Dismiss");
+            }
+        }
+
+        @Override
+        public void onResultFail(int resultCode, String errorResult) {
+            Log.e("FAIL_RESPONSE", errorResult);
+        }
+    };
+
+
+    @Override
+    public void onItemClick(com.cvapplication.kelevnor.mylocations.MODELS.locations_list.Location location) {
+
+        if(DEFAULT_TYPE == TYPE_NORMAL){
+            animateFAB();
+            Toast.makeText(this, "Check Weather with WOEID: "+ location.getWoeid(), Toast.LENGTH_SHORT).show();
+            Intent i = new Intent(this, LocationWeatherActivity.class);
+            i.putExtra("woeid",String.valueOf(location.getWoeid()));
+            startActivity(i);
+        }
+        else if(DEFAULT_TYPE == TYPE_ADD){
+            dialog.dismiss();
+            displayDialogTwoButtons("Action Required","Following Location Picked: \n\nTitle: "+location.getTitle()+" \nType: "+location.getLocationType()+" \nCoordinates: "+location.getLattLong()+" \n\nWould you like to add the location?","Cancel","Add", location);
+        }
+    }
+
+    @Override
+    public void onInternetPermissionSuccess(int resultCode, String message) {
+
+    }
+
+    @Override
+    public void onInternetPermissionFail(int resultCode, String errorMessage) {
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+
+        utilityPermissions.onRequestPermissionAction(requestCode, permissions, grantResults);
+
+    }
 }
+

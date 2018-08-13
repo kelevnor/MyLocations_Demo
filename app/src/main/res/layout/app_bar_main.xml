@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             app:theme="@style/ToolbarColoredBackArrow"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/colorGreyMedium"
+            android:background="@color/colorF0"
             app:titleTextColor="@color/colorText555"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             app:titleTextAppearance="@style/Toolbar.TitleText"/>
@@ -26,66 +26,6 @@
 
     <include layout="@layout/content_main" />
 
-    <!--<android.support.design.widget.FloatingActionButton-->
-        <!--xmlns:app="http://schemas.android.com/apk/res-auto"-->
-        <!--android:id="@+id/fabmain"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_gravity="bottom|end"-->
-        <!--android:layout_margin="@dimen/fab_margin"-->
-        <!--app:srcCompat="@android:drawable/ic_dialog_email"-->
-        <!--app:backgroundTint="@color/colorNabBackground"/>-->
-
-    <!--<android.support.design.widget.FloatingActionButton-->
-        <!--xmlns:app="http://schemas.android.com/apk/res-auto"-->
-        <!--android:id="@+id/fabtop"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_gravity="bottom|end"-->
-        <!--android:layout_margin="@dimen/fab_margin"-->
-        <!--app:srcCompat="@drawable/greenlocation"-->
-        <!--app:backgroundTint="@color/colorNabBackground"/>-->
-
-    <!--<android.support.design.widget.FloatingActionButton-->
-        <!--xmlns:app="http://schemas.android.com/apk/res-auto"-->
-        <!--android:id="@+id/fabbottom"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_gravity="bottom|end"-->
-        <!--android:layout_margin="@dimen/fab_margin"-->
-        <!--app:srcCompat="@drawable/bluelocation"-->
-        <!--app:backgroundTint="@color/colorNabBackground"/>-->
-
-
-    <ImageView
-        android:id="@+id/iv_green_selected"
-        android:layout_width="match_parent"
-        android:layout_height="5dp"
-        android:visibility="gone"
-        android:layout_gravity="bottom|end"
-        android:background="@color/markerGreen"/>
-    <ImageView
-        android:id="@+id/iv_green_selected_height"
-        android:layout_width="5dp"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:layout_gravity="end"
-        android:background="@color/markerGreen"/>
-    <ImageView
-        android:id="@+id/iv_blue_selected_height"
-        android:layout_width="5dp"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:layout_gravity="end"
-        android:background="@color/markerBlue"/>
-
-    <ImageView
-        android:id="@+id/iv_blue_selected"
-        android:layout_width="match_parent"
-        android:layout_height="5dp"
-        android:visibility="gone"
-        android:layout_gravity="bottom|end"
-        android:background="@color/markerBlue"/>
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabtop"
         android:layout_width="wrap_content"
@@ -96,8 +36,9 @@
         android:visibility="invisible"
         app:backgroundTint="@color/colorNabBackground"
         app:elevation="6dp"
+
         app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_location_on_blue_36dp" />
+         />
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabbottom"
         android:layout_width="wrap_content"
@@ -109,7 +50,7 @@
         app:elevation="6dp"
         app:backgroundTint="@color/colorNabBackground"
         app:pressedTranslationZ="12dp"
-        android:src="@drawable/ic_location_on_green_36dp" />
+         />
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabmain"
         android:layout_width="wrap_content"
@@ -122,4 +63,33 @@
         android:layout_marginBottom="70dp"
         android:src="@drawable/ic_add_black_24dp" />
 
+    <TextView
+        android:id="@+id/tv_query"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="Query"
+        android:background="@color/colorGreyMedium"
+        android:padding="5dp"
+        android:visibility="invisible"
+        android:elevation="6dp"
+        android:textStyle="bold"
+        android:textSize="18dp"
+        android:textColor="@color/colorLink"
+        app:layout_anchor="@id/fabbottom"
+        app:layout_anchorGravity="center"/>
+
+    <TextView
+        android:id="@+id/tv_latlong"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="Coord"
+        android:padding="5dp"
+        android:visibility="invisible"
+        android:elevation="6dp"
+        android:textStyle="bold"
+        android:textSize="18dp"
+        android:background="@color/colorGreyMedium"
+        android:textColor="@color/colorLink"
+        app:layout_anchor="@id/fabtop"
+        app:layout_anchorGravity="center"/>
 </android.support.design.widget.CoordinatorLayout>

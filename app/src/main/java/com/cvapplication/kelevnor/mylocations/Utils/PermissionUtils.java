@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.cvapplication.kelevnor.mylocations;
+package com.cvapplication.kelevnor.mylocations.Utils;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -26,6 +26,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
+
+import com.cvapplication.kelevnor.mylocations.R;
 
 /**
  * Utility class for access to runtime permissions.
@@ -158,7 +160,7 @@ public abstract class PermissionUtils {
                         public void onClick(DialogInterface dialog, int which) {
                             // After click on Ok, request the permission.
                             ActivityCompat.requestPermissions(getActivity(),
-                                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
                                     requestCode);
                             // Do not finish the Activity while requesting permission.
                             mFinishActivity = false;

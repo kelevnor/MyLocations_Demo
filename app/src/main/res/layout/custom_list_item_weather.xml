@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rl_outer"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/tv_date"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:paddingLeft="20dp"
+        android:background="@color/colorF0"
+        android:textStyle="bold"
+        android:textSize="@dimen/text_m_label"
+        android:text="08/13/2018"
+        android:gravity="center_vertical"
+        android:textColor="@color/colorText555" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="110dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:orientation="horizontal">
+
+
+
+       <ImageView
+           android:id="@+id/iv_weatherimg"
+           android:layout_width="0dp"
+           android:layout_weight="1"
+           android:layout_marginLeft="20dp"
+           android:layout_height="90dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="3"
+            android:layout_height="100dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_wind"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:textSize="@dimen/text_m_label"
+                android:textStyle="bold"
+                android:gravity="center_vertical"
+                android:layout_marginLeft="20dp"
+                android:textColor="@color/colorText555"
+                android:text="Type:"
+                />
+
+            <TextView
+                android:id="@+id/tv_humidity"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:layout_marginRight="20dp"
+                android:textStyle="normal"
+                android:textSize="@dimen/text_m_label"
+                android:text="NA"
+                android:layout_marginLeft="20dp"
+                android:textColor="@color/colorLink"
+                android:gravity="center_vertical"/>
+            <TextView
+                android:id="@+id/tv_temperature"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:layout_marginLeft="20dp"
+                android:textStyle="normal"
+                android:textSize="@dimen/text_m_label"
+                android:text="NA"
+                android:textColor="@color/colorLink"
+                android:gravity="center_vertical"/>
+
+            <TextView
+                android:id="@+id/tv_humidity"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:layout_marginLeft="20dp"
+                android:textStyle="normal"
+                android:textSize="@dimen/text_m_label"
+                android:text="NA"
+                android:textColor="@color/colorLink"
+                android:gravity="center_vertical"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/colorTextMedium"/>
+
+</LinearLayout>
+
+

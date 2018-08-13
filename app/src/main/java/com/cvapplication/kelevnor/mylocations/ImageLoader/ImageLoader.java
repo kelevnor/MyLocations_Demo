@@ -1,4 +1,4 @@
-package com.cvapplication.kelevnor.mylocations.Utils;
+package com.cvapplication.kelevnor.mylocations.ImageLoader;
 
 import android.app.Activity;
 import android.content.Context;
@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.widget.ImageView;
 
 import com.cvapplication.kelevnor.mylocations.R;
+import com.cvapplication.kelevnor.mylocations.Utils.UtilityHelperClass;
 
 import java.io.File;
 import java.io.FileInputStream;

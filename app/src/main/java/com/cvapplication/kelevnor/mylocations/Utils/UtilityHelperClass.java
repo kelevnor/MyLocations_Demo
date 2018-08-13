@@ -6,11 +6,13 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 
-import com.cvapplication.kelevnor.mylocations.models.objects.LocationList;
+import com.cvapplication.kelevnor.mylocations.MODELS.locations_list.Location;
+import com.cvapplication.kelevnor.mylocations.MODELS.locations_list.LocationWrap;
 import com.google.gson.Gson;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 /**
  * Created by Marios Sifalakis on 8/27/17.
@@ -18,47 +20,61 @@ import java.io.OutputStream;
 
 public class UtilityHelperClass {
 
-    public static void saveLocationListInSharedPreferences(LocationList state, Context con){
+    public static void saveLocationListInSharedPreferences(List<Location> loc, Context con){
         SharedPreferences appSharedPrefs = PreferenceManager.getDefaultSharedPreferences(con);
         SharedPreferences.Editor prefsEditor = appSharedPrefs.edit();
         Gson gson = new Gson();
-        String json = gson.toJson(state);
+        LocationWrap locationWrap = new LocationWrap();
+        locationWrap.setLocations(loc);
+        String json = gson.toJson(locationWrap);
         prefsEditor.putString("locations", json);
         prefsEditor.commit();
     }
 
-    public static LocationList getLocationListFromSharedPreferences(Context con){
+    public static List<Location> getLocationListFromSharedPreferences(Context con){
         SharedPreferences appSharedPrefs = PreferenceManager
                 .getDefaultSharedPreferences(con);
         Gson gson = new Gson();
         String json = appSharedPrefs.getString("locations", "");
-        LocationList locations = gson.fromJson(json, LocationList.class);
-        return locations;
+        LocationWrap temp = gson.fromJson(json, LocationWrap.class);
+        List<Location> tempLocations = temp.getLocations();
+        return tempLocations;
     }
 
     //Save String in SharedPreferences
-    public static void saveIntegerInPreference(String intName, Integer intValue, Context con) {
+    public static void saveStringInPreference(String intName, String intValue, Context con) {
         SharedPreferences preferences = PreferenceManager
                 .getDefaultSharedPreferences(con);
         SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt(intName, intValue);
+        editor.putString(intName, intValue);
         editor.commit();
     }
     //Get String from SharedPreferences
-    public static Integer getIntegerFromPreference(String variable_name, Context con) {
-        Integer preference_return;
-        SharedPreferences preferences = PreferenceManager
-                .getDefaultSharedPreferences(con);
-        preference_return = preferences.getInt(variable_name, 0);
+    public static String getStringFromPreference(String variable_name, Context con) {
 
-        return preference_return;
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(con);
+        String mapTypeString = preferences.getString(variable_name, "NA");
+
+        return mapTypeString;
     }
 
     //Method to detect internet availability
     public static boolean isNetworkAvailable(Context context) {
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+
+        boolean haveConnectedWifi = false;
+        boolean haveConnectedMobile = false;
+
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+        for (NetworkInfo ni : netInfo) {
+            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+                if (ni.isConnected())
+                    haveConnectedWifi = true;
+            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+                if (ni.isConnected())
+                    haveConnectedMobile = true;
+        }
+        return haveConnectedWifi || haveConnectedMobile;
     }
 
     public static void CopyStream(InputStream is, OutputStream os)
@@ -81,5 +97,11 @@ public class UtilityHelperClass {
             }
         }
         catch(Exception ex){}
+    }
+
+    public static Double roundToDecimalPlaces(double value, int decimalPlaces)
+    {
+        Double shift = Math.pow(10,decimalPlaces);
+        return Math.round(value*shift)/shift;
     }
 }

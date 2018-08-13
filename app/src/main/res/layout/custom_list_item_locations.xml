@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rl_outer"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="20dp"
+            android:textStyle="bold"
+            android:textSize="@dimen/text_m_label"
+            android:text="Title:"
+            android:gravity="center_vertical"
+            android:textColor="@color/colorText555" />
+
+        <TextView
+            android:id="@+id/tv_titlevalue"
+            android:layout_width="0dp"
+            android:layout_weight="3"
+            android:layout_height="match_parent"
+            android:layout_marginRight="20dp"
+            android:textStyle="normal"
+            android:textSize="@dimen/text_m_label"
+            android:text="NA"
+            android:textColor="@color/colorLink"
+            android:gravity="right|center_vertical"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_type"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_height="match_parent"
+            android:textSize="@dimen/text_m_label"
+            android:textStyle="bold"
+            android:gravity="center_vertical"
+            android:layout_marginLeft="20dp"
+            android:textColor="@color/colorText555"
+            android:text="Type:"
+            />
+        <TextView
+            android:id="@+id/tv_typevalue"
+            android:layout_width="0dp"
+            android:layout_weight="3"
+            android:layout_height="match_parent"
+            android:layout_marginRight="20dp"
+            android:textStyle="normal"
+            android:textSize="@dimen/text_m_label"
+            android:text="NA"
+            android:textColor="@color/colorLink"
+            android:gravity="right|center_vertical"/>
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/tv_latlong"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:gravity="center_vertical"
+            android:layout_height="match_parent"
+            android:textSize="@dimen/text_m_label"
+            android:layout_marginLeft="20dp"
+            android:textStyle="bold"
+            android:textColor="@color/colorText555"
+            android:text="Location:"
+            />
+        <TextView
+            android:id="@+id/tv_latlongvalue"
+            android:layout_width="0dp"
+            android:layout_weight="3"
+            android:layout_height="match_parent"
+            android:layout_marginRight="20dp"
+            android:textStyle="normal"
+            android:textSize="@dimen/text_m_label"
+            android:text="NA"
+            android:textColor="@color/colorLink"
+            android:gravity="right|center_vertical"/>
+    </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/colorTextMedium"/>
+
+</LinearLayout>
+
+

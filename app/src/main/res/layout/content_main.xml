@@ -49,31 +49,116 @@
             android:text="@string/list_empty"/>
 
     </RelativeLayout>
-    <RelativeLayout
-        android:id="@+id/rl_map"
+    <LinearLayout
+        android:id="@+id/ll_map"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@color/colorWhite"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/ll_topinfo"
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:background="@color/colorWhite"
+            android:layout_height="0dp"
+            android:layout_weight="2">
+
+            <Switch
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="2"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:textColor="@color/colorText555"
+                android:text="@string/enabletrackingservice"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginLeft="10dp"
+                android:orientation="vertical"
+                android:layout_weight="2">
+
+                <SeekBar
+                    android:id="@+id/sb_timevariant"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="590"
+                    android:layout_marginRight="10dp"
+                    />
+
+
+
+                    <TextView
+                        android:id="@+id/tv_timevalue"
+                        android:layout_width="match_parent"
+                        android:layout_marginRight="10dp"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center"
+                        android:textStyle="bold"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/text_m_label"
+                        android:background="@color/colorWhite"
+                        android:textColor="@color/colorText555"
+                        android:text="every 1 min"/>
+
+
+
+
+            </LinearLayout>
+
+
+        </LinearLayout>
         <fragment
             xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/map"
             class="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="0dp"
+            android:layout_weight="2" />
 
-        <TextView
-            android:id="@+id/tv_marker_pick_indicator"
+        <LinearLayout
+            android:id="@+id/ll_bottominfo"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Blue Marker Icon Selected"
-            android:layout_marginTop="18dp"
-            android:visibility="gone"
-            android:textStyle="bold"
-            android:paddingRight="50dp"
-            android:gravity="center_horizontal"
-            android:textSize="@dimen/text_label"/>
+            android:orientation="vertical"
+            android:background="@color/colorWhite"
+            android:layout_height="0dp"
+            android:layout_weight="4">
+            <TextView
+                android:id="@+id/tv_activitylogtitle"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:gravity="left|center_vertical"
+                android:paddingLeft="20dp"
+                android:textStyle="bold"
+                android:textSize="@dimen/text_m_label"
+                android:background="@color/colorF0"
+                android:textColor="@color/colorText555"
+                android:text="@string/activitylogtitle"/>
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_activitylog"
+                android:scrollbars="vertical"
+                android:background="@color/colorWhite"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                />
+            <TextView
+                android:id="@+id/tv_empty_activity_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:paddingTop="20dp"
+                android:textStyle="bold"
+                android:background="@color/colorWhite"
+                android:textColor="@color/colorText555"
+                android:text="@string/activity_list_empty"/>
+        </LinearLayout>
 
 
 
 
-    </RelativeLayout>
+    </LinearLayout>
 </android.support.constraint.ConstraintLayout>

@@ -26,10 +26,10 @@
             android:layout_height="match_parent"
             android:layout_gravity="start"
             android:fitsSystemWindows="true"
-            android:background="@color/colorGreyMedium"
+            android:background="@color/colorWhite"
             app:headerLayout="@layout/nav_header_main"
             app:menu="@menu/activity_main_drawer"
-            app:itemTextColor="@color/colorText555"
+            app:itemTextColor="@color/colorLink"
             app:itemIconTint="@color/colorTextDark"
             >
             <LinearLayout

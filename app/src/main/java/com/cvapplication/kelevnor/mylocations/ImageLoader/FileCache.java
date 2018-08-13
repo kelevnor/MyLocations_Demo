@@ -1,4 +1,4 @@
-package com.cvapplication.kelevnor.mylocations.Utils;
+package com.cvapplication.kelevnor.mylocations.ImageLoader;
 
 import android.content.Context;
 

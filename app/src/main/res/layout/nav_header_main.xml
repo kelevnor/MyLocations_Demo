@@ -8,42 +8,42 @@
 
         android:layout_width="match_parent"
         android:layout_height="@dimen/nav_header_height"
+        android:orientation="vertical"
 
-
-        android:orientation="horizontal"
-        android:paddingLeft="10dp"
-
-        android:background="@drawable/side_nav_bar">
+        android:background="@color/colorF0">
 
         <ImageView
             android:id="@+id/imageview"
-            android:layout_width="75dp"
-            android:layout_height="76dp"
-
-            android:layout_marginTop="10dp"
-            android:textSize="@dimen/text_label"
-            android:layout_gravity="center_vertical"
-             android:src="@drawable/profile"/>
+            android:layout_width="wrap_content"
+            android:background="@color/colorF0"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:layout_marginLeft="10dp"
+            android:paddingTop="10dp"
+            android:adjustViewBounds="true"
+            android:gravity="left"
+            android:src="@drawable/metaweather_logo"/>
 
 
 
         <TextView
             android:id="@+id/textView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="@dimen/text_profile_label"
-            android:paddingLeft="15dp"
-            android:layout_marginTop="15dp"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+
+            android:textSize="@dimen/text_m_label"
             android:textStyle="bold"
             android:layout_gravity="center_vertical"
-            android:textColor="@color/colorTextMedium"
-            android:text="Vagios\nPeppas" />
+            android:textColor="@color/colorGreyMediumDarker"
+            android:text="@string/clicktoaddname"
+            android:gravity="center"/>
 
     </LinearLayout>
     <View
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
-        android:background="@color/colorGreyMediumDarker"
+        android:background="@color/colorGreyMedium"
         android:layout_alignParentBottom="true"/>
 
 

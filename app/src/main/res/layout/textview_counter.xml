@@ -8,4 +8,5 @@
     android:textSize="@dimen/text_label"
     android:textColor="@color/colorText555"
     android:textStyle="bold"
+    android:text="0"
     />
