@@ -56,7 +56,7 @@ public class ADAPTER_WeatherItem extends RecyclerView.Adapter<ADAPTER_WeatherIte
     // Create new views (invoked by the layout manager)
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent,
-                                                   int viewType) {
+                                         int viewType) {
         // create a new view
         LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.custom_list_item_weather, parent, false);
@@ -83,7 +83,11 @@ public class ADAPTER_WeatherItem extends RecyclerView.Adapter<ADAPTER_WeatherIte
         holder.humidity.setText(String.valueOf(searchList.get(position).getHumidity())+" %");
         holder.temprature.setText(UtilityHelperClass.roundToDecimalPlaces(searchList.get(position).getMinTemp(), 1)+ " C < "+UtilityHelperClass.roundToDecimalPlaces(searchList.get(position).getMinTemp(), 1)+" C < "+UtilityHelperClass.roundToDecimalPlaces(searchList.get(position).getMaxTemp(), 1)+" C");
 
-        displayImageForWeather(searchList.get(position).getWeatherStateAbbr(), holder.ivWeather);
+        try {
+            displayImageForWeather(searchList.get(position).getWeatherStateAbbr(), holder.ivWeather);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
     }
@@ -98,7 +102,7 @@ public class ADAPTER_WeatherItem extends RecyclerView.Adapter<ADAPTER_WeatherIte
         void onItemClick(Location location);
     }
 
-    private void displayImageForWeather(String weatherAbbreviation, ImageView iv){
+    private void displayImageForWeather(String weatherAbbreviation, ImageView iv) throws Exception{
         switch (weatherAbbreviation){
             case "sn":
                 imageLoader.DisplayImage(Config.snowImg, iv, act);

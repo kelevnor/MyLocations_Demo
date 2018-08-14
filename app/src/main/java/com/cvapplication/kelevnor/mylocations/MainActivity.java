@@ -439,15 +439,28 @@ public class MainActivity extends AppCompatActivity
 
                 if (lt.hasLocation()) {
                     loc = lt.getLocation();
-                    Log.e("lt LAT/LONG", String.valueOf(loc.getLatitude()) + " / " + String.valueOf(loc.getLongitude()));
 
-                    new PullLocationData(loc.getLatitude(), loc.getLongitude(), pullCoordinates);
+                    if(UtilityHelperClass.isNetworkAvailable(getApplicationContext())){
+                        new PullLocationData(loc.getLatitude(), loc.getLongitude(), pullCoordinates);
+                        Log.e("lt LAT/LONG", String.valueOf(loc.getLatitude()) + " / " + String.valueOf(loc.getLongitude()));
+                    }
+                    else{
+                        displayDialogOneButton("Error","Could not establish Internet Connection!","Dismiss");
+                    }
+
                 } else {
                     if (lt.hasPossiblyStaleLocation()) {
                         loc = lt.getPossiblyStaleLocation();
-                        new PullLocationData(loc.getLatitude(), loc.getLongitude(), pullCoordinates);
+                        if(UtilityHelperClass.isNetworkAvailable(getApplicationContext())){
+                            new PullLocationData(loc.getLatitude(), loc.getLongitude(), pullCoordinates);
+                        }
+                        else{
+                            displayDialogOneButton("Error","Could not establish Internet Connection!","Dismiss");
+                        }
                         Log.e("STALE lt LAT/LONG", String.valueOf(loc.getLatitude()) + " / " + String.valueOf(loc.getLongitude()));
                     } else {
+                        displayDialogOneButton("Error","No Coordinates found on the device!","Dismiss");
+
                         Log.e("NO LOCATION FOUND", "NO LOCATION FOUND");
                     }
                 }
@@ -567,7 +580,7 @@ public class MainActivity extends AppCompatActivity
         final EditText input = new EditText(MainActivity.this);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.MATCH_PARENT);
+                LinearLayout.LayoutParams.MATCH_PARENT);
         input.setLayoutParams(lp);
         builder.setView(input);
         builder.setPositiveButton(rightBtn, new DialogInterface.OnClickListener() {
@@ -583,7 +596,7 @@ public class MainActivity extends AppCompatActivity
                     }
                     else if(!UtilityHelperClass.isNetworkAvailable(getApplicationContext())){
                         Log.e("!Connection Avail", "!Connection Avail");
-                        displayDialogOneButton("Error","Could not establish Internet Connection","Dismiss");
+                        displayDialogOneButton("Error","Could not establish Internet Connection!","Dismiss");
                     }
                 }
                 else{
@@ -670,9 +683,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private String convertToTime(int number){
-       int minutes = (number % 3600) / 60;
-       int seconds = number % 60;
-       return String.valueOf(minutes)+" min "+ String.valueOf(seconds)+" sec";
+        int minutes = (number % 3600) / 60;
+        int seconds = number % 60;
+        return String.valueOf(minutes)+" min "+ String.valueOf(seconds)+" sec";
     }
 
     //On result listener for PullLocationQueryData Api Call - to retreive location result from search?query metaweather data
@@ -753,7 +766,7 @@ public class MainActivity extends AppCompatActivity
     public void onItemClick(com.cvapplication.kelevnor.mylocations.MODELS.locations_list.Location location) {
 
         if(DEFAULT_TYPE == TYPE_NORMAL){
-            animateFAB();
+//            animateFAB();
             Toast.makeText(this, "Check Weather with WOEID: "+ location.getWoeid(), Toast.LENGTH_SHORT).show();
             Intent i = new Intent(this, LocationWeatherActivity.class);
             i.putExtra("woeid",String.valueOf(location.getWoeid()));
